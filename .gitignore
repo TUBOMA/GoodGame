@@ -1,2 +1,37 @@
+# =========================
+# OS固有の不要ファイル (Mac / Windows)
+# =========================
+# Mac
 .DS_Store
-**/.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# =========================
+# エディタ・IDE関連 (VS Codeなど)
+# =========================
+.vscode/
+.idea/
+*.swp
+*~
+
+# =========================
+# Webフロントエンド / ログ / キャッシュ
+# =========================
+# 今後npm(Node.js)などでツールを導入した時用
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# キャッシュファイル
+.eslintcache
+.stylelintcache
