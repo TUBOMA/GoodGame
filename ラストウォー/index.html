@@ -1,14 +1,33 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>ラストウォー</title>
-</head>
-<body>
-  <h1>ラストウォー</h1>
-  <p>（ここにメンバーがゲームを作っていく）</p>
-  
-  <br>
-  <a href="../index.html"><button>ホームに戻る</button></a>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Gate Runner</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main id="game-wrap">
+      <div id="game"></div>
+    </main>
+
+    <!-- Phaserをネット経由で呼び出すことでweb上で使えるようにする -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+
+    <!-- コードの呼び出す場所。上から順に呼ぶ -->
+    <!-- フェーズごとの設定 -->
+    <script src="src/settings.js"></script>
+    <!-- 背景関係の描画を管理 -->
+    <script src="src/RoadView.js"></script>
+    <!-- プレイヤーの描画を管理 -->
+    <script src="src/PlayerView.js"></script>
+    <!-- UIの描画を管理 -->
+    <script src="src/HudView.js"></script>
+    <!-- 道の上の物をPhaserの機能で作り出す -->
+    <script src="src/FallingObjectFactory.js"></script>
+    <!-- 全体のフェーズ管理 -->
+    <script src="src/RunnerScene.js"></script>
+    <!-- Phaserの起動 -->
+    <script src="main.js"></script>
+  </body>
 </html>
