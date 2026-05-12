@@ -2,13 +2,33 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>イライラ棒</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>イライラ棒ゲーム</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>イライラ棒</h1>
-  <p>（ここにメンバーがゲームを作っていく）</p>
-  
-  <br>
-  <a href="../index.html"><button>ホームに戻る</button></a>
+  <main class="app">
+    <section class="top-bar" aria-label="ゲーム情報">
+      <div class="info-box">
+        <span class="label">スコア</span>
+        <span id="score" class="value">0</span>
+      </div>
+    </section>
+
+    <section class="game-panel" aria-label="イライラ棒ゲーム">
+      <div id="gameArea" class="game-area">
+        <div id="startZone" class="zone start-zone">START</div>
+        <div id="goalZone" class="zone goal-zone">GOAL</div>
+        <div id="cursor" class="cursor" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button id="restartButton" type="button">リスタート</button>
+      <button type="button">メイン画面へ</button>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
 </body>
 </html>
