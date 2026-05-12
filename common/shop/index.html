@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>GOOD GAME - ショップ</title>
+  <!-- 1つ上の階層(../)にある共通デザインを読み込み -->
+  <link rel="stylesheet" href="../main.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">アイテムショップ</div>
+    <div class="nav-right">
+      <div class="coin-display">所持コイン: <span id="ui-coin">0</span> C</div>
+      <!-- ルートのindex.htmlに戻るには2階層上(../../)を指定 -->
+      <a href="../../index.html" class="btn back-btn">◀ ホームに戻る</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1 class="page-title">ショップ</h1>
+    
+    <!-- 商品一覧 -->
+    <div class="shop-grid">
+      <div class="shop-item">
+        <h3>実績アイコン：初心者</h3>
+        <p>プロフィールを飾るアイコン。</p>
+        <div class="price">100 C</div>
+        <button class="btn buy-btn">購入する</button>
+      </div>
+
+      <div class="shop-item">
+        <h3>テーマ：ダークモード</h3>
+        <p>画面の背景を黒くできる機能。</p>
+        <div class="price">500 C</div>
+        <button class="btn buy-btn">購入する</button>
+      </div>
+
+      <div class="shop-item">
+        <h3>VIPパス</h3>
+        <p>何か良いことがあるかも...？</p>
+        <div class="price">9999 C</div>
+        <button class="btn buy-btn">購入する</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- 1つ上の階層(../)にある共通システムを読み込み -->
+  <script src="../main.js"></script>
+</body>
+</html>
