@@ -2,13 +2,50 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>マインスイーパー</title>
+  <title>クリッカーゲーム</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>マインスイーパー</h1>
-  <p>（ここにメンバーがゲームを作っていく）</p>
-  
-  <br>
-  <a href="../index.html"><button>ホームに戻る</button></a>
+
+<!-- ===== メイン ===== -->
+<div id="mainGame">
+  <h1>クリッカーゲーム</h1>
+
+  <p>敵HP: <span id="hp"></span></p>
+  <button id="attackBtn">攻撃</button>
+
+  <p>攻撃力: <span id="attack">1</span></p>
+  <p>自動攻撃: <span id="auto">0</span></p>
+  <p>コイン: <span id="coin">0</span></p>
+
+  <h3>ショップ</h3>
+  <button id="atkUp">攻撃力 +1 (10コイン)</button>
+  <button id="autoUp">自動攻撃 +1 (20コイン)</button>
+
+  <hr>
+  <h3>ミニゲーム</h3>
+  <button id="toMemory">神経衰弱</button>
+  <button id="toDodge">回避ゲーム</button>
+</div>
+
+<!-- ===== 神経衰弱 ===== -->
+<div id="memoryGame" style="display:none;">
+  <h1>神経衰弱</h1>
+  <p>ミス: <span id="miss">0</span> / 5</p>
+
+  <div id="board"></div>
+
+  <button id="backFromMemory">戻る</button>
+</div>
+
+<!-- ===== 回避ゲーム ===== -->
+<div id="dodgeGame" style="display:none;">
+  <h1>回避ゲーム</h1>
+  <p>生存時間: <span id="time">0</span></p>
+  <canvas id="canvas" width="400" height="300"></canvas>
+  <button id="backFromDodge">戻る</button>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
