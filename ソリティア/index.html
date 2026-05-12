@@ -1,14 +1,454 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>ソリティア</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神経衰弱</title>
 </head>
 <body>
-  <h1>ソリティア</h1>
-  <p>（ここにメンバーがゲームを作っていく）</p>
-  
-  <br>
-  <a href="../index.html"><button>ホームに戻る</button></a>
+    <div class="container">
+        <h1>神経衰弱</h1>
+        
+        <div class="status-row">
+            <div class="info">
+                <div id="highScoreDisplay">ベストスコア: -</div>
+                <div id="message">スタートボタンを押して開始</div>
+            </div>
+            <div class="scores">
+                <div id="scoreDisplay">スコア: 0</div>
+                <div id="missDisplay">ミス: 0</div>
+            </div>
+        </div>
+ 
+        <div class="memory-game" id="gameBoard">
+            </div>
+        
+        <div class="button-group">
+            <button id="startButton">ゲームスタート</button>
+            <button id="resetButton" disabled>リセット</button>
+            <a href="../index.html" class="home-button">ホームに戻る</a>
+        </div>
+    </div>
+    <script>
+        // --- 1. 定数とDOM要素の定義 ---
+        const gameBoard = document.getElementById('gameBoard');
+        const startButton = document.getElementById('startButton');
+        const resetButton = document.getElementById('resetButton');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const missDisplay = document.getElementById('missDisplay');
+        const highScoreDisplay = document.getElementById('highScoreDisplay');
+        const messageDisplay = document.getElementById('message');
+        const HIGHSCORE_KEY = 'memoryGameHighScore';
+ 
+        // --- 2. ゲームの状態変数 ---
+        let cardsFlipped = 0;   
+        let turns = 0;
+        let miss = 0;
+        let scores = 0;   
+        let combos = 0;       
+        let firstCard = null;   
+        let secondCard = null;  
+        let newRecordTimer = null;
+        let boardLock = false;  
+        let isGameActive = false;
+        let isHighScoreUpdated = false;
+ 
+        // --- 3. ユーティリティ関数 ---
+ 
+        function loadHighScore() {
+            const savedScore = localStorage.getItem(HIGHSCORE_KEY);
+            return savedScore ? parseInt(savedScore, 10) : 0; 
+        }
+
+        function updateHighScoreDisplay(isNewRecord = false) {
+            if (newRecordTimer) {
+                clearTimeout(newRecordTimer);
+                newRecordTimer = null;
+            }
+
+            const currentHighScore = loadHighScore();
+
+            highScoreDisplay.textContent = currentHighScore === 0
+                ? 'ベストスコア: -'
+                : `ベストスコア: ${currentHighScore}${isNewRecord ? ' (新記録!)' : ''}`;
+
+            if (isNewRecord) {
+                newRecordTimer = setTimeout(() => {
+                    newRecordTimer = null;
+                    updateHighScoreDisplay();
+                }, 2000);
+            }
+        }
+ 
+        function generateAndShuffleCards() {
+            let values = [];
+            for (let i = 1; i <= 8; i++) {
+                values.push(i, i);
+            }
+            
+            for (let i = values.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [values[i], values[j]] = [values[j], values[i]];
+            }
+            
+            return values;
+        }
+ 
+        // --- 4. ゲームボードの構築 ---
+ 
+        function createBoard(values) {
+            gameBoard.innerHTML = '';
+            
+            values.forEach(value => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.value = value;
+                
+                const cardFront = document.createElement('div');
+                cardFront.classList.add('card-face', 'card-front');
+                cardFront.textContent = value;
+ 
+                const cardBack = document.createElement('div');
+                cardBack.classList.add('card-face', 'card-back');
+                
+                card.appendChild(cardFront);
+                card.appendChild(cardBack);
+                
+                card.addEventListener('click', flipCard);
+                gameBoard.appendChild(card);
+            });
+        }
+ 
+        // --- 5. ゲームロジック本体 ---
+ 
+        function flipCard(event) {
+            if (!isGameActive || boardLock) return;
+            
+            const card = event.currentTarget;
+            if (card.classList.contains('flipped')) return;
+ 
+            card.classList.add('flipped');
+            
+            if (!firstCard) {
+                firstCard = card;
+                messageDisplay.textContent = '2枚目を選んでください';
+                return;
+            }
+            
+            secondCard = card;
+            turns++;
+            boardLock = true; 
+            messageDisplay.textContent = '判定中...';
+            
+            checkForMatch();
+        }
+ 
+        function checkForMatch() {
+            const isMatch = firstCard.dataset.value === secondCard.dataset.value;
+            
+            if (isMatch) {
+                matchCards();
+            } else {
+                unflipCards();
+            }
+        }
+ 
+        function matchCards() {
+            // マッチしたカードはflipped状態のままmatchedクラスを追加し、固定
+            firstCard.classList.add('matched');
+            secondCard.classList.add('matched');
+            
+            firstCard.removeEventListener('click', flipCard);
+            secondCard.removeEventListener('click', flipCard);
+            
+            resetBoard();
+            cardsFlipped++;
+            
+            messageDisplay.textContent = 'マッチ成功！';
+            combos++;
+            const baseScore = 100;
+            const turnBonnus = Math.max(0, 70 - turns * 5);
+            const comboBonus = (combos - 1) * 100;
+            scores += baseScore + turnBonnus + comboBonus;
+            scoreDisplay.textContent = `スコア: ${scores}`;
+            
+            if (cardsFlipped === 8) { 
+                gameClear();
+            }
+        }
+ 
+        function unflipCards() {
+            // 0.5秒後に裏返す
+            setTimeout(() => {
+                firstCard.classList.remove('flipped');
+                secondCard.classList.remove('flipped');
+                resetBoard(); 
+                messageDisplay.textContent = '一致しませんでした';
+                miss++;
+                missDisplay.textContent = `ミス: ${miss}`;
+                if (miss >= 6) {
+                    messageDisplay.textContent = 'ゲームオーバー！';
+                    gameClear();
+                }
+            }, 500); 
+        }
+ 
+        function resetBoard() {
+            [firstCard, secondCard] = [null, null];
+            boardLock = false;
+        }
+ 
+        function gameClear() {
+            isGameActive = false;
+            messageDisplay.textContent = `終了: ${scores}点！`;
+            startButton.disabled = false;
+            resetButton.disabled = true;
+            startButton.textContent = 'もう一度プレイ';
+            
+            // ハイスコアの更新
+            const currentHighScore = loadHighScore();
+            if (scores > currentHighScore) {
+                localStorage.setItem(HIGHSCORE_KEY, scores);
+                highScoreDisplay.textContent = `ベストスコア: ${scores} (新記録!)`;
+                isHighScoreUpdated = true;
+            } else {
+                highScoreDisplay.textContent = `ベストスコア: ${currentHighScore}`;
+            }
+        }
+ 
+        // --- 6. 初期化とゲーム開始/リセット ---
+ 
+        function initializeGame() {
+            const currentHighScore = loadHighScore();
+            highScoreDisplay.textContent = `ベストスコア: ${currentHighScore === Infinity ? '-' : currentHighScore}`;
+            
+            const initialValues = generateAndShuffleCards();
+            createBoard(initialValues);
+            
+            startButton.addEventListener('click', startGame);
+            resetButton.addEventListener('click', resetGame);
+        }
+ 
+        function startGame() {
+            isGameActive = true;
+            turns = 0;
+            scores = 0;
+            miss = 0;
+            cardsFlipped = 0;
+            resetBoard();
+            scoreDisplay.textContent = `スコア: ${scores}`;
+            missDisplay.textContent = `ミス: ${miss}`;
+            if(isHighScoreUpdated){
+                updateHighScoreDisplay(true);
+                isHighScoreUpdated = false;
+            }
+            startButton.disabled = true;
+            resetButton.disabled = false;
+            messageDisplay.textContent = 'カードをめくってください';
+            
+            const shuffledValues = generateAndShuffleCards();
+            createBoard(shuffledValues);
+        }
+ 
+        function resetGame() {
+            startGame();
+            messageDisplay.textContent = 'ゲームをリセットしました';
+        }
+ 
+        // ページロード時にゲームを初期化
+        window.onload = initializeGame;
+    </script>
+    <style>
+        /* --- 1. 全体デザイン & リセット --- */
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            margin: 0;
+            background-color: #f0f4f8;
+            padding: 10px;
+        }
+ 
+        .container {
+            width: 95%; 
+            max-width: 600px; 
+            padding: 20px;
+            border-radius: 15px;
+            background-color: #ffffff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            text-align: center;
+        }
+ 
+        h1 {
+            color: #333;
+            font-size: 1.8em; 
+            margin-bottom: 20px;
+        }
+ 
+        /* --- 2. 情報表示エリア --- */
+
+        .status-row {
+            display: flex;
+            align-items: stretch;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .info {
+            flex: 1;
+            max-width: calc(100% - 150px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #e9ecef;
+        }
+        
+        #highScoreDisplay {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        #message {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .scores {
+            width: 130px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 6px;
+            padding: 8px 0;
+        }
+        #missDisplay, #scoreDisplay {
+            font-size: 1.05em;
+            font-weight: bold;
+            color: #007bff;
+            white-space: nowrap;
+        }
+ 
+        /* --- 3. カードボード（グリッド） --- */
+        .memory-game {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); 
+            grid-template-rows: repeat(4, 1fr); 
+            gap: 8px;
+            width: 100%;
+            aspect-ratio: 5 / 4; 
+            margin: 0 auto;
+        }
+ 
+        /* --- 4. 個別カードのスタイル --- */
+        .card {
+            perspective: 1000px;
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+            aspect-ratio: 1 / 1; 
+        }
+        
+        /* カードがめくられた状態 (表面が見えている状態) */
+        .card.flipped {
+            transform: rotateY(180deg);
+            pointer-events: none;
+            width: 95%;
+        }
+        
+        /* カードの表と裏 */
+        .card-face {
+            position: absolute;
+            width: 95%;
+            height: 100%;
+            border-radius: 5px;
+            backface-visibility: hidden; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1.2em, 4vw, 2em); 
+            font-weight: bold;
+            border: 1px solid darkblue;
+        	border-radius: 5px;
+            box-shadow: rgb(0, 0, 0, 0.2) 3px 3px;
+        }
+ 
+        /* カードの裏面 */
+        .card-back {
+            background-color: #2c3e50; /* 画像裏面の代わりに濃い色を指定 */
+            background-size: cover; 
+            background-position: center; 
+            color: transparent; 
+        }
+ 
+        /* カードの表面（数字） */
+        .card-front {
+            background-color: #f8f9fa;
+            color: #333;
+            transform: rotateY(180deg); 
+            border: 2px solid #333;
+        }
+        
+        /* マッチしたカード - 薄くする処理を削除し、表面のまま固定 */
+        .card.matched {
+            pointer-events: none;
+            /* opacityやfilterを削除 */
+            transform: rotateY(180deg); /* 表面を維持 */
+            width: 95%;
+        }
+ 
+        /* --- 5. ボタンエリア --- */
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+ 
+        #startButton, #resetButton {
+            padding: 10px 20px;
+            font-size: 1.1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 25px;
+        }
+        
+        #startButton {
+            background-color: #28a745;
+            color: white;
+        }
+        #startButton:hover:not(:disabled) {
+            background-color: #218838;
+        }
+ 
+        #resetButton {
+            background-color: #dc3545;
+            color: white;
+        }
+        #resetButton:hover:not(:disabled) {
+            background-color: #c82333;
+        }
+        .home-button {
+            /*grid-column: 1;*/
+            padding: 8px 10px;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            white-space: nowrap;
+        }
+
+        .home-button:hover {
+            background-color: #5a6268;
+        }
+    </style>
 </body>
 </html>
