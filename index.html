@@ -2,17 +2,49 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>GOOD GAME</title>
+  <title>GOOD GAME - ホーム</title>
+  <!-- 共通デザインを読み込み -->
+  <link rel="stylesheet" href="./common/main.css">
 </head>
 <body>
-  <h1>ホーム画面</h1>
-  <p>遊びたいゲームを選んでください</p>
-  
-  <div>
-    <a href="./イライラ棒/index.html"><button>イライラ棒</button></a>
-    <a href="./マインスイーパー/index.html"><button>マインスイーパー</button></a>
-    <a href="./ラストウォー/index.html"><button>ラストウォー</button></a>
-    <a href="./ソリティア/index.html"><button>ソリティア</button></a>
-  </div>
+  <!-- 上部のナビゲーションバー -->
+  <header class="navbar">
+    <div class="logo">GOOD GAME</div>
+    <div class="nav-right">
+      <div class="coin-display">所持コイン: <span id="ui-coin">0</span> C</div>
+      <a href="./common/shop/index.html" class="btn shop-btn">🛒 ショップ</a>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="container">
+    <h1 class="page-title">ゲームを選ぶ</h1>
+    
+    <!-- ゲーム一覧（グリッドレイアウト） -->
+    <div class="game-grid">
+      <a href="./イライラ棒/index.html" class="game-card">
+        <h2>イライラ棒</h2>
+        <p>マウスの集中力が試される！</p>
+      </a>
+      
+      <a href="./マインスイーパー/index.html" class="game-card">
+        <h2>マインスイーパー</h2>
+        <p>定番の思考型パズル</p>
+      </a>
+      
+      <a href="./ラストウォー/index.html" class="game-card">
+        <h2>ラストウォー</h2>
+        <p>生き残りをかけた戦い</p>
+      </a>
+      
+      <a href="./ソリティア/index.html" class="game-card">
+        <h2>ソリティア</h2>
+        <p>一人遊びの王道</p>
+      </a>
+    </div>
+  </main>
+
+  <!-- 共通システムを読み込み -->
+  <script src="./common/main.js"></script>
 </body>
 </html>
