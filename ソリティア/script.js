@@ -162,7 +162,7 @@ function resetBoard() {
 
 function gameClear() {
     isGameActive = false;
-    messageDisplay.textContent = `終了: ${scores}点！`;
+    messageDisplay.textContent = `クリア！スコア: ${scores}点！`;
     startButton.disabled = false;
     resetButton.disabled = true;
     startButton.textContent = 'もう一度プレイ';
