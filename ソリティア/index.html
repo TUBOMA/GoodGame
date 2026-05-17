@@ -1,14 +1,35 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>ソリティア</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神経衰弱</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>ソリティア</h1>
-  <p>（ここにメンバーがゲームを作っていく）</p>
-  
-  <br>
-  <a href="../index.html"><button>ホームに戻る</button></a>
+    <div class="container">
+        <h1>神経衰弱</h1>
+
+        <div class="status-row">
+            <div class="info">
+                <div id="highScoreDisplay">ベストスコア: -</div>
+                <div id="message">スタートボタンを押して開始</div>
+            </div>
+            <div class="scores">
+                <div id="scoreDisplay">スコア: 0</div>
+                <div id="missDisplay">ミス: 0</div>
+            </div>
+        </div>
+
+        <div class="memory-game" id="gameBoard"></div>
+
+        <div class="button-group">
+            <button id="startButton">ゲームスタート</button>
+            <button id="resetButton" disabled>リセット</button>
+            <a href="../index.html" class="home-button">ホームに戻る</a>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
