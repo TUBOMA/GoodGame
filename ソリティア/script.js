@@ -201,9 +201,9 @@ function startGame() {
     resetBoard();
     updateHighScoreDisplay();
     if (typeof GameSystem !== 'undefined') {
-        if (GameSystem.hasItem('s_miss_plus')) { //あとでまとめます
-            //いい感じに強くする処理
-            misslimit += 1;
+        if (typeof GameSystem !== 'undefined') {
+          // 未購入なら 0 が返ってくるので、何も起きず安全です
+          misslimit += GameSystem.getItemCount('s_miss_plus');
         }
     }
 
