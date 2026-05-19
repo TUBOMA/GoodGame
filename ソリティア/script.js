@@ -12,6 +12,7 @@ let turns = 0;
 let miss = 0;
 let scores = 0;
 let combos = 0;
+let misslimit = 6;
 let firstCard = null;
 let secondCard = null;
 let newRecordTimer = null;
@@ -148,7 +149,7 @@ function unflipCards() {
         combos = 0;
         missDisplay.textContent = `ミス: ${miss}`;
 
-        if (miss >= 6) {
+        if (miss >= misslimit) {
             messageDisplay.textContent = 'ゲームオーバー！';
             gameClear();
         }
@@ -162,10 +163,13 @@ function resetBoard() {
 
 function gameClear() {
     isGameActive = false;
-    messageDisplay.textContent = `クリア！スコア: ${scores}点！`;
+    messageDisplay.textContent = `終了　スコア: ${scores}点！`;
     startButton.disabled = false;
     resetButton.disabled = true;
     startButton.textContent = 'もう一度プレイ';
+    if (typeof GameSystem !== 'undefined') {
+        GameSystem.addCoins(100); // 数字は一旦100統一で 調整は後々
+    }
 
     const currentHighScore = loadHighScore();
     if (scores > currentHighScore) {
@@ -196,6 +200,12 @@ function startGame() {
 
     resetBoard();
     updateHighScoreDisplay();
+    if (typeof GameSystem !== 'undefined') {
+        if (GameSystem.hasItem('s_miss_plus')) { //あとでまとめます
+            //いい感じに強くする処理
+            misslimit += 1;
+        }
+    }
 
     scoreDisplay.textContent = `スコア: ${scores}`;
     missDisplay.textContent = `ミス: ${miss}`;
