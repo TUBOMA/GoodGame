@@ -17,7 +17,9 @@ let playerX = 0;
 let playerY = 0;
 let playerRect = null;
 const pressedKeys = new Set();
-const playerSpeed = 190;
+const playerSpeed = 210;
+const playerRadius = 11;
+const playerHitRadius = 10;
 
 // WASDと矢印キーを、同じ方向名に変換します。
 const keyMap = {
@@ -167,26 +169,31 @@ function makeActualPath(coarsePath, columns, rows) {
   return path;
 }
 
-// 複数回ランダム生成して、できるだけ長い一本道を採用します。
+// 複数回ランダム生成して、長すぎない一本道を採用します。
 function makePath(columns, rows) {
   const coarseColumns = Math.ceil(columns / 2);
   const coarseRows = Math.ceil(rows / 2);
-  let bestPath = null;
+  let selectedPath = null;
+  const targetLength = Math.round((coarseColumns + coarseRows) * 1.9);
 
-  for (let attempt = 0; attempt < 180; attempt += 1) {
+  for (let attempt = 0; attempt < 160; attempt += 1) {
     const coarsePath = tryMakeCoarsePath(coarseColumns, coarseRows);
 
-    if (coarsePath && (!bestPath || coarsePath.length > bestPath.length)) {
-      bestPath = coarsePath;
+    if (!coarsePath) {
+      continue;
+    }
+
+    if (!selectedPath || Math.abs(coarsePath.length - targetLength) < Math.abs(selectedPath.length - targetLength)) {
+      selectedPath = coarsePath;
     }
   }
 
-  return makeActualPath(bestPath || makeFallbackCoarsePath(coarseColumns, coarseRows), columns, rows);
+  return makeActualPath(selectedPath || makeFallbackCoarsePath(coarseColumns, coarseRows), columns, rows);
 }
 
 // STARTやGOALを、対応するマスの中に配置します。
 function placeZone(zone, column, row, cellWidth, cellHeight, areaHeight) {
-  const padding = 6;
+  const padding = 8;
   const width = Math.max(34, cellWidth - padding * 2);
   const height = Math.max(34, cellHeight - padding * 2);
   const left = column * cellWidth + padding;
@@ -212,8 +219,8 @@ function generateCourse() {
 
   const areaWidth = gameArea.clientWidth;
   const areaHeight = gameArea.clientHeight;
-  const columns = areaWidth < 520 ? 8 : areaWidth < 720 ? 12 : 16;
-  const rows = areaHeight < 500 ? 9 : 11;
+  const columns = areaWidth < 420 ? 8 : 10;
+  const rows = areaHeight < 560 ? 10 : 12;
   const cellWidth = areaWidth / columns;
   const cellHeight = areaHeight / rows;
   const pathCells = makePath(columns, rows);
@@ -302,7 +309,7 @@ function addHazards(pathCells, cellWidth, cellHeight) {
     .slice(4, -4)
     .filter((cell) => isStraightPathCell(pathCells, cell.index));
   const hazardCells = shuffle(candidateCells);
-  const hazardCount = Math.min(5, hazardCells.length, Math.max(2, Math.floor(pathCells.length / 8)));
+  const hazardCount = Math.min(6, hazardCells.length);
   const selectedHazards = [];
 
   for (const cell of hazardCells) {
@@ -315,8 +322,18 @@ function addHazards(pathCells, cellWidth, cellHeight) {
     }
   }
 
+  for (const cell of hazardCells) {
+    if (selectedHazards.length >= hazardCount) {
+      break;
+    }
+
+    if (!selectedHazards.includes(cell)) {
+      selectedHazards.push(cell);
+    }
+  }
+
   selectedHazards.forEach((cell, index) => {
-    const size = Math.max(22, Math.min(34, Math.min(cellWidth, cellHeight) * 0.44));
+    const size = Math.max(22, Math.min(32, Math.min(cellWidth, cellHeight) * 0.37));
     const hazard = document.createElement("div");
     const pathDirection = getPathDirection(pathCells, cell.index);
     const cutterDirection = pathDirection === "horizontal" ? "is-vertical" : "is-horizontal";
@@ -326,7 +343,7 @@ function addHazards(pathCells, cellWidth, cellHeight) {
     hazard.style.top = `${cell.row * cellHeight + (cellHeight - size) / 2}px`;
     hazard.style.width = `${size}px`;
     hazard.style.height = `${size}px`;
-    hazard.style.animationDuration = `${0.75 + index * 0.12 + Math.random() * 0.45}s`;
+    hazard.style.animationDuration = `${1.15 + index * 0.12 + Math.random() * 0.45}s`;
 
     const blade = document.createElement("div");
     blade.className = "cutter-blade";
@@ -359,22 +376,23 @@ function restartGame() {
 
 // 2つの四角形が重なっているかを判定します。
 function rectsOverlap(a, b) {
+  const margin = 3;
+
   return (
-    a.left < b.right &&
-    a.right > b.left &&
-    a.top < b.bottom &&
-    a.bottom > b.top
+    a.left < b.right - margin &&
+    a.right > b.left + margin &&
+    a.top < b.bottom - margin &&
+    a.bottom > b.top + margin
   );
 }
 
 // プレイヤーの当たり判定用の四角形を作ります。
 function getCursorRect(x, y) {
-  const radius = 9;
   return {
-    left: x - radius,
-    right: x + radius,
-    top: y - radius,
-    bottom: y + radius
+    left: x - playerHitRadius,
+    right: x + playerHitRadius,
+    top: y - playerHitRadius,
+    bottom: y + playerHitRadius
   };
 }
 
@@ -386,8 +404,8 @@ function updatePlayerRect() {
 // プレイヤーを指定位置へ移動します。ゲームエリア外には出ないように制限します。
 function movePlayerTo(x, y) {
   const areaRect = gameArea.getBoundingClientRect();
-  playerX = Math.min(areaRect.right - 11, Math.max(areaRect.left + 11, x));
-  playerY = Math.min(areaRect.bottom - 11, Math.max(areaRect.top + 11, y));
+  playerX = Math.min(areaRect.right - playerRadius, Math.max(areaRect.left + playerRadius, x));
+  playerY = Math.min(areaRect.bottom - playerRadius, Math.max(areaRect.top + playerRadius, y));
   updatePlayerRect();
 
   cursor.style.left = `${playerX - areaRect.left}px`;

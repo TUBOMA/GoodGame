@@ -3,9 +3,16 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+
 body {
   margin: 0;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
   color: #f7fbff;
   background:
@@ -34,24 +41,29 @@ button:hover,
   background: #fde047;
 }
 
-/* ゲーム全体を中央に配置します。 */
+/* ゲーム全体を縦長画面として中央に固定します。 */
 .app {
-  width: min(1080px, calc(100% - 32px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  width: min(560px, calc(100% - 24px));
+  height: 100vh;
   margin: 0 auto;
-  padding: 32px 0;
+  padding: 12px 0;
 }
 
-/* スコアと操作説明を横並びにするエリアです。 */
+/* スコアと操作説明を縦画面に収まる2列で表示します。 */
 .top-bar {
-  display: flex;
-  gap: 14px;
+  display: grid;
+  grid-template-columns: 0.7fr 1.3fr;
+  gap: 10px;
   align-items: stretch;
-  margin-bottom: 18px;
+  margin-bottom: 0;
 }
 
 .info-box,
 .actions {
-  min-height: 74px;
+  min-height: 64px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
   background: rgba(15, 23, 42, 0.76);
@@ -62,7 +74,7 @@ button:hover,
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 12px 16px;
+  padding: 10px 12px;
 }
 
 .label {
@@ -78,7 +90,7 @@ button:hover,
 }
 
 .control-box {
-  min-width: 260px;
+  min-width: 0;
 }
 
 .control-text {
@@ -92,13 +104,16 @@ button:hover,
   gap: 10px;
   align-items: center;
   justify-content: center;
-  margin-top: 18px;
-  padding: 12px;
+  margin-top: 0;
+  padding: 10px;
 }
 
 /* ゲーム盤を囲む外側の枠です。 */
 .game-panel {
-  padding: 16px;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 10px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
   background: rgba(2, 6, 23, 0.58);
@@ -109,8 +124,12 @@ button:hover,
 .game-area {
   position: relative;
   overflow: hidden;
-  height: min(68vh, 620px);
-  min-height: 430px;
+  width: min(100%, 520px, calc((100vh - 180px) * 0.75));
+  margin: 0 auto;
+  aspect-ratio: 3 / 4;
+  height: auto;
+  max-height: 100%;
+  min-height: 0;
   border: 3px solid #38bdf8;
   border-radius: 8px;
   background:
@@ -147,8 +166,8 @@ button:hover,
   position: absolute;
   z-index: 4;
   display: none;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border: 3px solid #ffffff;
   border-radius: 50%;
   background: #22d3ee;
@@ -161,7 +180,7 @@ button:hover,
 .wall {
   position: absolute;
   z-index: 2;
-  border-radius: 4px;
+  border-radius: 6px;
   background: repeating-linear-gradient(
     45deg,
     #f97316 0 12px,
@@ -208,21 +227,21 @@ button:hover,
 
 @keyframes cutter-horizontal {
   from {
-    transform: translateX(-18px);
+    transform: translateX(-22px);
   }
 
   to {
-    transform: translateX(18px);
+    transform: translateX(22px);
   }
 }
 
 @keyframes cutter-vertical {
   from {
-    transform: translateY(-18px);
+    transform: translateY(-22px);
   }
 
   to {
-    transform: translateY(18px);
+    transform: translateY(22px);
   }
 }
 
@@ -258,13 +277,38 @@ button:hover,
 }
 
 /* 画面が狭い時は縦並びにして見やすくします。 */
-@media (max-width: 760px) {
+@media (max-width: 420px) {
+  .app {
+    gap: 8px;
+    padding: 8px 0;
+  }
+
   .top-bar {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .info-box,
+  .actions {
+    min-height: 54px;
+  }
+
+  .info-box {
+    padding: 8px 10px;
+  }
+
+  .label {
+    margin-bottom: 3px;
+    font-size: 0.75rem;
+  }
+
+  .control-text {
+    font-size: 0.9rem;
   }
 
   .actions {
     justify-content: stretch;
+    padding: 8px;
   }
 
   .actions button {
@@ -274,10 +318,6 @@ button:hover,
 
   .game-panel {
     padding: 10px;
-  }
-
-  .game-area {
-    min-height: 520px;
   }
 
   .zone {
