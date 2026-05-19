@@ -120,3 +120,57 @@ a {
   color: #e74c3c;
   text-align: right;
 }
+
+/* 購入済みボタンのデザイン */
+.buy-btn:disabled, .sold-out {
+  background-color: #bdc3c7 !important; /* 灰色にする */
+  color: #7f8c8d !important;
+  cursor: not-allowed; /* クリックできないカーソルにする */
+  box-shadow: none;
+  transform: none;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.75); /* 背景を暗くする */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* 一番手前に表示 */
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.modal-content h2 {
+  color: #c0392b; /* 警告っぽい赤色 */
+  margin-top: 0;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+/* 危険な操作用のボタン（赤） */
+.danger-btn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+}
+.danger-btn:hover {
+  background-color: #c0392b;
+}
