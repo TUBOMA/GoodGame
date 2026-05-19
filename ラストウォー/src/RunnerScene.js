@@ -24,12 +24,12 @@ class RunnerScene extends Phaser.Scene {
     this.showStartScreen();
   }
 
+
+  //ゲームプレイ中の進行を行う
   update(time, delta) {
-    //プレイ中に毎フレーム動く処理
     if (this.gameState !== "playing") {
       return;
     }
-
     this.elapsedSeconds += delta / 1000;
 
     const phase = this.getCurrentPhase();
@@ -49,7 +49,8 @@ class RunnerScene extends Phaser.Scene {
   //スタート画面の処理
   showStartScreen() {
     this.gameState = "ready";
-    this.population = Start_Population;
+    this.playPhases = null;
+    this.population = this.getStartPopulation();
     this.phaseIndex = 0;
     this.currentGatePairIndex = 0;
     this.elapsedSeconds = 0;
@@ -67,7 +68,10 @@ class RunnerScene extends Phaser.Scene {
     this.clearFallingObject();
 
     this.gameState = "playing";
-    this.population = Start_Population;
+    //ゲーム開始時に、今回のプレイで使う全フェーズの数字を先に作る
+    //ステージ生成はアイテムで増えた人数を考えず、基本の Start_Population で作る
+    this.playPhases = Create_Random_Phases();
+    this.population = this.getStartPopulation();
     this.phaseIndex = 0;
     this.currentGatePairIndex = 0;
     this.elapsedSeconds = 0;
@@ -98,19 +102,19 @@ class RunnerScene extends Phaser.Scene {
   handleRestartInput() {
     if (this.gameState !== "playing") {
       this.startGame();
+
     }
   }
 
-  //
+   //左右移動
   movePlayerToLane(lane) {
-    //左右移動
     this.playerView.moveToLane(lane);
     this.roadView.updateLaneHighlight(lane);
   }
 
   spawnNextObject() {
     //もしフェーズの最大値ならゴールを返す
-    if (this.phaseIndex >= Phases.length) {
+    if (this.phaseIndex >= this.playPhases.length) {
       this.fallingObject = this.fallingObjectFactory.createGoal();
       return;
     }
@@ -118,7 +122,6 @@ class RunnerScene extends Phaser.Scene {
     const phase = this.getCurrentPhase();
     this.roadView.setFog(phase.fogAlpha);
 
-    //
     if (this.currentGatePairIndex < phase.gates.length) {
       const gatePair = phase.gates[this.currentGatePairIndex];
       this.fallingObject = this.fallingObjectFactory.createGatePair(gatePair, phase, this.currentGatePairIndex);
@@ -130,6 +133,9 @@ class RunnerScene extends Phaser.Scene {
 
   //ものを下に流すやつ
   moveFallingObject(delta) {
+    if (!this.fallingObject) {
+      return;
+    }
 
     const phase = this.getCurrentPhase();
     const distance = phase.speed * (delta / 1000);
@@ -137,16 +143,17 @@ class RunnerScene extends Phaser.Scene {
     this.fallingObject.y += distance;
     this.fallingObject.container.y = this.fallingObject.y;
 
-    // isAlreadyUsed がないと、同じゲートに当たっている数フレーム分、
-    // 何度も人数計算されてしまいます。
+    //isAlreadyUsed がないと、同じゲートに当たっている数フレーム分、何度も計算される
+    //isAlreadyUsedがtrueの時だけ処理を行う
     if (!this.fallingObject.isAlreadyUsed && this.fallingObject.y >= Player_Y - 38) {
       this.handleFallingObject();
     }
 
+    //十分手前側に流れたら削除し、その後次のイブジェウトを追加する
     if (this.fallingObject.y > Game_Height + 120) {
       this.fallingObject.container.destroy();
       this.fallingObject = null;
-
+      //
       if (this.gameState === "playing") {
         this.spawnNextObject();
       }
@@ -164,8 +171,8 @@ class RunnerScene extends Phaser.Scene {
     }
   }
 
+  //ゲート通過時の人数変化
   applySelectedGate() {
-    // ゲート通過時の人数変化
     this.fallingObject.isAlreadyUsed = true;
 
     const selectedGate = this.getSelectedGate();
@@ -184,7 +191,7 @@ class RunnerScene extends Phaser.Scene {
   }
 
   getSelectedGate() {
-    // 今いるレーンのゲートを取り出す処理
+    //今いるレーンのゲートを取り出す処理
     if (this.playerView.getCurrentLane() === Lane.Left) {
       return this.fallingObject.gates[0];
     }
@@ -192,8 +199,8 @@ class RunnerScene extends Phaser.Scene {
     return this.fallingObject.gates[1];
   }
 
+  //フェーズ最後の壁チェック
   applyWallDamage() {
-    // フェーズ最後の壁チェック
     this.fallingObject.isAlreadyUsed = true;
 
     const oldPopulation = this.population;
@@ -202,16 +209,20 @@ class RunnerScene extends Phaser.Scene {
     this.playerView.updatePopulation(this.population);
     this.hudView.showFloatingResult(`${oldPopulation} -> ${this.population}`, this.playerView.getX());
 
+    //ゲームオーバー時の動き
+    //死亡メッセージと一緒に終了を送信
     if (this.population <= 0) {
       this.finishGame(false, "壁を突破できなかった");
       return;
     }
 
+    //フェーズを進める
     this.phaseIndex += 1;
     this.currentGatePairIndex = 0;
 
-    if (this.phaseIndex < Phases.length) {
-      this.hudView.showCenterMessage(Phases[this.phaseIndex].name);
+    //フェーズ終了時に
+    if (this.phaseIndex < this.playPhases.length) {
+      this.hudView.showCenterMessage(this.playPhases[this.phaseIndex].name);
     }
   }
 
@@ -221,36 +232,78 @@ class RunnerScene extends Phaser.Scene {
 
     if (didClear) {
       this.saveBestTime();
+      this.addClearCoins();
+      this.saveGameSystemScore();
     }
 
     this.hudView.showEndScreen(didClear, reason, this.elapsedSeconds, this.population);
     this.updateHud();
   }
 
+  //ベストタイム保存
   saveBestTime() {
-    // ベストタイム保存
     const isFirstClear = this.bestTime === 0;
     const isNewRecord = this.elapsedSeconds < this.bestTime;
 
+    //最初の0で更新し続けないように条件を組む
     if (isFirstClear || isNewRecord) {
       this.bestTime = this.elapsedSeconds;
       localStorage.setItem(Best_Time_Key, String(this.bestTime));
     }
   }
 
+  getStartPopulation() {
+    //GameSystem がある時だけ、アイテム効果で初期人数を増やす
+    if (
+      typeof GameSystem !== "undefined" &&
+      typeof GameSystem.hasItem === "function" &&
+      GameSystem.hasItem(Start_Plus_Item_Id)
+    ) {
+
+      return Start_Population +  GameSystem.getItemCount(Start_Plus_Item_Id);
+    }
+
+    return Start_Population;
+  }
+
+  addClearCoins() {
+    //クリア報酬として共通コインを100枚追加する
+    if (typeof GameSystem !== "undefined" && typeof GameSystem.addCoins === "function") {
+      GameSystem.addCoins(100);
+    }
+  }
+
+  saveGameSystemScore() {
+    //タイムが短いほど高いスコアになるようにする
+    const currentScore = Math.max(1, Math.floor(100000 - this.elapsedSeconds * 1000));
+
+    if (
+      typeof GameSystem !== "undefined" &&
+      typeof GameSystem.loadGameData === "function" &&
+      typeof GameSystem.saveGameData === "function"
+    ) {
+      const myData = GameSystem.loadGameData(Game_System_Id) || {};
+      myData.highScore = Math.max((myData.highScore || 0), currentScore);
+      myData.bestTime = this.bestTime;
+      GameSystem.saveGameData(Game_System_Id, myData);
+    }
+  }
+
+
+  //基本的に何かしらの内部処理を行ったらこれを呼び出して各種数値の更新を行う
   updateHud() {
-    // 画面上の数値表示を更新
+    //画面上の数値表示を更新
     const phase = this.getCurrentPhase();
     this.hudView.update(this.population, this.phaseIndex, phase, this.elapsedSeconds, this.bestTime);
   }
 
   getCurrentPhase() {
-    // 今のフェーズ設定を取得
-    return Get_Phase_By_Index(this.phaseIndex);
+    //今のフェーズ設定を取得
+    return Get_Phase_By_Index(this.phaseIndex, this.playPhases);
   }
 
   clearFallingObject() {
-    // リトライ時などに古いゲート表示を消す処理
+    //リトライ時などに古いゲート表示を消す処理
     if (this.fallingObject) {
       this.fallingObject.container.destroy();
       this.fallingObject = null;
