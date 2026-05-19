@@ -10,16 +10,19 @@
   <a href="../index.html" class="back-btn">◀ ホームに戻る</a>
 
   <main class="container">
-    <h1>コイン追加テスト</h1>
+    <h1>コイン追加・実績テスト</h1>
     <p>現在の所持コイン: <strong id="ui-coin">0</strong> C</p>
 
     <div class="button-area">
       <button onclick="gainCoins(10)" class="action-btn">10コイン追加</button>
       <button onclick="gainCoins(100)" class="action-btn special-btn">100コイン追加</button>
+      
+      <!-- ★追加：実績解除テスト用ボタン -->
+      <button onclick="testUnlockAchievement()" class="action-btn" style="background-color: #3498db; color: white;">実績「はじめての冒険」解除</button>
     </div>
   </main>
 
-  <!-- ★重要：まず共通システムを読み込んで GameSystem を使えるようにする -->
+  <!-- まず共通システムを読み込んで GameSystem を使えるようにする -->
   <script src="../common/main.js"></script>
   <!-- その後に、このテストゲーム専用のJSを読み込む -->
   <script src="./main.js"></script>

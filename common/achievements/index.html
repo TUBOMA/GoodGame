@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>GOOD GAME - 実績</title>
+  <link rel="stylesheet" href="../main.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">実績一覧</div>
+    <div class="nav-right">
+      <div class="coin-display">所持コイン: <span id="ui-coin">0</span> C</div>
+      <a href="../../index.html" class="btn back-btn">◀ ホームに戻る</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1 class="page-title">トロフィールーム</h1>
+    <p style="text-align: center;">ゲームをプレイして様々な条件をクリアし、実績を解除しよう！</p>
+    
+    <!-- 実績一覧 -->
+    <div class="achievement-grid">
+      
+      <!-- 実績1 -->
+      <div class="achievement-card" data-id="play_first">
+        <h3>はじめての冒険</h3>
+        <p class="ach-desc">いずれかのゲームを1回プレイする。</p>
+      </div>
+
+      <!-- 実績2 -->
+      <div class="achievement-card" data-id="rich_man">
+        <h3>大富豪</h3>
+        <p class="ach-desc">累計で1000コインを獲得する。</p>
+      </div>
+
+      <!-- 実績3 -->
+      <div class="achievement-card" data-id="lastwar_boss">
+        <h3>世界の救世主</h3>
+        <p class="ach-desc">ラストウォーでボスを撃破する。</p>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="../main.js"></script>
+  <script src="./achievements.js"></script>
+</body>
+</html>

@@ -174,3 +174,40 @@ a {
 .danger-btn:hover {
   background-color: #c0392b;
 }
+
+/* --- 実績画面用のデザイン --- */
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.achievement-card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 2px solid #f1c40f; /* デフォルト（解除済み）は金枠 */
+}
+
+.achievement-card h3 {
+  margin-top: 0;
+  color: #d35400;
+}
+
+/* ★未開放（ロック状態）のデザイン */
+.achievement-card.locked {
+  background: #f9f9f9;
+  border: 2px solid #bdc3c7;
+  filter: grayscale(100%); /* 白黒にする */
+  opacity: 0.6; /* 少し薄くする */
+}
+.achievement-card.locked h3::before {
+  content: "🔒 "; /* 名前の前に鍵マーク */
+}
+.achievement-card.locked .ach-desc {
+  color: #7f8c8d;
+}
