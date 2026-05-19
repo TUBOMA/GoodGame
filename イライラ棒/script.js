@@ -31,6 +31,16 @@ const keyMap = {
   arrowright: "right"
 };
 
+// GameSystemが読み込まれている時だけ、指定した数のコインを追加します。
+function gainCoins(amount) {
+  if (typeof GameSystem !== "undefined") {
+    GameSystem.addCoins(amount);
+    console.log(`テストゲーム内で ${amount} コイン獲得しました！`);
+  } else {
+    console.error("GameSystemが見つかりません。HTMLでの読み込み順を確認してください。");
+  }
+}
+
 function cellKey(column, row) {
   return `${column},${row}`;
 }
@@ -424,11 +434,7 @@ function clearRound() {
   isPlaying = false;
   pressedKeys.clear();
   updateScore(score + 100);
-
-  // ホーム側のゲームシステムがある時だけ、クリア報酬のコインを追加します。
-  if (typeof GameSystem !== "undefined") {
-    GameSystem.addCoins(100);
-  }
+  gainCoins(100);
 
   gameArea.classList.remove("is-playing");
 
