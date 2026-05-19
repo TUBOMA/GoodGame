@@ -1,3 +1,4 @@
+/* ページ全体の基本設定です。 */
 * {
   box-sizing: border-box;
 }
@@ -11,6 +12,9 @@ body {
     radial-gradient(circle at 20% 18%, rgba(55, 210, 190, 0.22), transparent 24rem),
     linear-gradient(135deg, #111827 0%, #1e293b 46%, #14213d 100%);
 }
+
+
+/* ボタンとリンクボタンの見た目をそろえます。 */
 
 button,
 .button-link {
@@ -32,12 +36,14 @@ button:hover,
   background: #fde047;
 }
 
+/* ゲーム全体を中央に配置します。 */
 .app {
   width: min(1080px, calc(100% - 32px));
   margin: 0 auto;
   padding: 32px 0;
 }
 
+/* スコアと操作説明を横並びにするエリアです。 */
 .top-bar {
   display: flex;
   gap: 14px;
@@ -92,6 +98,7 @@ button:hover,
   padding: 12px;
 }
 
+/* ゲーム盤を囲む外側の枠です。 */
 .game-panel {
   padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -100,6 +107,7 @@ button:hover,
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
 }
 
+/* 実際にプレイヤー、壁、障害物が置かれるゲームエリアです。 */
 .game-area {
   position: relative;
   overflow: hidden;
@@ -114,6 +122,7 @@ button:hover,
   background-size: 40px 40px;
 }
 
+/* STARTとGOALの共通デザインです。 */
 .zone {
   position: absolute;
   z-index: 3;
@@ -135,6 +144,7 @@ button:hover,
   background: #fca5a5;
 }
 
+/* 操作するプレイヤーです。JavaScriptで位置を動かします。 */
 .cursor {
   position: absolute;
   z-index: 4;
@@ -149,6 +159,7 @@ button:hover,
   transform: translate(-50%, -50%);
 }
 
+/* JavaScriptで生成される壁です。触れるとミスになります。 */
 .wall {
   position: absolute;
   z-index: 2;
@@ -161,6 +172,7 @@ button:hover,
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.18);
 }
 
+/* JavaScriptで生成されるカッターの配置枠です。 */
 .hazard {
   position: absolute;
   z-index: 3;
@@ -183,6 +195,7 @@ button:hover,
   animation-direction: alternate;
 }
 
+/* 回転して見えるカッター本体です。 */
 .cutter-blade {
   width: 100%;
   height: 100%;
@@ -221,10 +234,12 @@ button:hover,
   }
 }
 
+/* プレイ中はゲームエリアの枠色を変えます。 */
 .game-area.is-playing {
   border-color: #86efac;
 }
 
+/* ミスした時にゲームエリアを揺らします。 */
 .game-area.is-danger {
   animation: shake 0.22s linear;
 }
@@ -244,6 +259,7 @@ button:hover,
   }
 }
 
+/* 画面が狭い時は縦並びにして見やすくします。 */
 @media (max-width: 760px) {
   .top-bar {
     flex-direction: column;
