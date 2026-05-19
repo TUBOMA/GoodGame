@@ -16,6 +16,16 @@ let playerY = 0;
 let playerRect = null;
 const pressedKeys = new Set();
 const playerSpeed = 190;
+const keyMap = {
+  w: "up",
+  arrowup: "up",
+  s: "down",
+  arrowdown: "down",
+  a: "left",
+  arrowleft: "left",
+  d: "right",
+  arrowright: "right"
+};
 
 function cellKey(column, row) {
   return `${column},${row}`;
@@ -397,10 +407,10 @@ restartButton.addEventListener("click", restartGame);
 
 function hasMovementInput() {
   return (
-    pressedKeys.has("w") ||
-    pressedKeys.has("a") ||
-    pressedKeys.has("s") ||
-    pressedKeys.has("d")
+    pressedKeys.has("up") ||
+    pressedKeys.has("down") ||
+    pressedKeys.has("left") ||
+    pressedKeys.has("right")
   );
 }
 
@@ -411,19 +421,19 @@ function updateGame(currentTime) {
   let moveX = 0;
   let moveY = 0;
 
-  if (pressedKeys.has("w")) {
+  if (pressedKeys.has("up")) {
     moveY -= 1;
   }
 
-  if (pressedKeys.has("s")) {
+  if (pressedKeys.has("down")) {
     moveY += 1;
   }
 
-  if (pressedKeys.has("a")) {
+  if (pressedKeys.has("left")) {
     moveX -= 1;
   }
 
-  if (pressedKeys.has("d")) {
+  if (pressedKeys.has("right")) {
     moveX += 1;
   }
 
@@ -452,16 +462,20 @@ function updateGame(currentTime) {
 }
 
 window.addEventListener("keydown", (event) => {
-  const key = event.key.toLowerCase();
+  const key = keyMap[event.key.toLowerCase()];
 
-  if (["w", "a", "s", "d"].includes(key)) {
+  if (key) {
     event.preventDefault();
     pressedKeys.add(key);
   }
 });
 
 window.addEventListener("keyup", (event) => {
-  pressedKeys.delete(event.key.toLowerCase());
+  const key = keyMap[event.key.toLowerCase()];
+
+  if (key) {
+    pressedKeys.delete(key);
+  }
 });
 
 window.addEventListener("resize", () => {
