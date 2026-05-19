@@ -5,7 +5,8 @@ const SAVE_KEY = 'good_game_save_data';
 const DEFAULT_SAVE_DATA = {
   common: {
     coins: 0,
-    ownedItems: {}
+    ownedItems: {},
+    unlockedAchievements: [] // ★新規：解除済み実績のIDを入れる箱
   },
   games: {}
 };
@@ -114,7 +115,75 @@ const GameSystem = {
     const data = this._loadAll();
     data.games[gameId] = gameDataObj;
     this._saveAll(data);
-  }
+  },
+    
+    hasAchievement: function(achId) {
+        const data = this._loadAll();
+        const achs = data.common.unlockedAchievements || [];
+        return achs.includes(achId);
+      },
+
+      // 実績を解除する関数（各ゲームから呼び出される）
+      unlockAchievement: function(achId, achName) {
+        const data = this._loadAll();
+        
+        // 過去のセーブデータ対策（箱がなければ作る）
+        if (!data.common.unlockedAchievements) {
+          data.common.unlockedAchievements = [];
+        }
+
+        // すでに解除済みなら何もしない
+        if (data.common.unlockedAchievements.includes(achId)) {
+          return false;
+        }
+
+        // 解除リストに追加してセーブ
+        data.common.unlockedAchievements.push(achId);
+        this._saveAll(data);
+
+        // 画面の右下にカッコいい通知を出す
+        this.showToast(`🏆 実績解除: ${achName}`);
+        console.log(`[実績] 「${achName}」を解除しました！`);
+        return true;
+      },
+
+      // 画面に一時的な通知（トースト）を出す機能
+      showToast: function(message) {
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        
+        // CSSを書かなくてもJS側でデザインを当てる
+        Object.assign(toast.style, {
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          backgroundColor: '#f39c12',
+          color: 'white',
+          padding: '15px 25px',
+          borderRadius: '8px',
+          fontWeight: 'bold',
+          boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+          zIndex: '10000',
+          transition: 'opacity 0.5s, transform 0.5s',
+          opacity: '0',
+          transform: 'translateY(20px)'
+        });
+
+        document.body.appendChild(toast);
+
+        // ちょっと待ってからフワッと表示
+        setTimeout(() => {
+          toast.style.opacity = '1';
+          toast.style.transform = 'translateY(0)';
+        }, 10);
+
+        // 3秒後に消す
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(20px)';
+          setTimeout(() => toast.remove(), 500);
+        }, 3000);
+      }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
