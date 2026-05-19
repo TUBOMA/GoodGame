@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>GOOD GAME - ホーム</title>
-  <!-- 共通デザインを読み込み -->
   <link rel="stylesheet" href="./common/main.css">
 </head>
 <body>
-  <!-- 上部のナビゲーションバー -->
+
   <header class="navbar">
     <div class="logo">GOOD GAME</div>
     <div class="nav-right">
@@ -16,11 +15,14 @@
     </div>
   </header>
 
-  <!-- メインコンテンツ -->
   <main class="container">
     <h1 class="page-title">ゲームを選ぶ</h1>
+    <!--
+    <div id="secret-message" style="display: none; background: #ffeaa7; padding: 15px; text-align: center; border-radius: 8px; margin-bottom: 20px; font-weight: bold; color: #d35400;">
+      🎉 テスト用メッセージの購入ありがとうございます！この文字は購入者限定です！
+    </div>
+    -->
     
-    <!-- ゲーム一覧（グリッドレイアウト） -->
     <div class="game-grid">
       <a href="./イライラ棒/index.html" class="game-card">
         <h2>イライラ棒</h2>
@@ -28,8 +30,9 @@
       </a>
       
       <a href="./マインスイーパー/index.html" class="game-card">
-        <h2>マインスイーパー</h2>
-        <p>定番の思考型パズル</p>
+        <h2>クリッカーゲーム</h2>
+        <p>一人遊びの王道</p>
+
       </a>
       
       <a href="./ラストウォー/index.html" class="game-card">
@@ -38,13 +41,41 @@
       </a>
       
       <a href="./ソリティア/index.html" class="game-card">
-        <h2>ソリティア</h2>
-        <p>一人遊びの王道</p>
+        <h2>神経衰弱</h2>
+        <p>定番の思考型パズル</p>
       </a>
+      
+      <!--
+      <a href="./test/index.html" class="game-card">
+        <h2>動作テスト用</h2>
+        <p>コインの追加テスト</p>
+      </a>
+      -->
+      
     </div>
+
+    <div style="text-align: center; margin-top: 60px;">
+      <button id="btn-trigger-reset" class="btn back-btn" style="background-color: #7f8c8d;">データを初期化する</button>
+    </div>
+
   </main>
 
-  <!-- 共通システムを読み込み -->
+  <div id="reset-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h2 id="modal-title">⚠️ 警告</h2>
+      <p id="modal-text">すべてのデータ（所持コイン、購入したアイテム）を消去します。本当によろしいですか？</p>
+      <div class="modal-buttons">
+        <button id="btn-cancel-reset" class="btn back-btn">やめる</button>
+        <button id="btn-next-reset" class="btn danger-btn">はい、消去します</button>
+      </div>
+    </div>
+  </div>
+
   <script src="./common/main.js"></script>
+  
+  <script src="./common/reset.js"></script>
+  
+  <script src="./common/home.js"></script>
+
 </body>
 </html>
