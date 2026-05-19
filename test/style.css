@@ -1,0 +1,59 @@
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: sans-serif;
+  background-color: #e8f4f8; /* テストと分かりやすいように少し青い背景 */
+  color: #333;
+}
+
+.back-btn {
+  display: inline-block;
+  padding: 10px 15px;
+  background-color: #95a5a6;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.back-btn:hover {
+  background-color: #7f8c8d;
+}
+
+.container {
+  max-width: 500px;
+  margin: 40px auto;
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.button-area {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.action-btn {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #f1c40f;
+  color: #333;
+  transition: transform 0.1s;
+}
+
+.action-btn:active {
+  transform: scale(0.95); /* 押した時に少し凹むアニメーション */
+}
+
+.special-btn {
+  background-color: #e74c3c;
+  color: white;
+}

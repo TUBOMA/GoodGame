@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>GOOD GAME - ショップ</title>
+  <link rel="stylesheet" href="../main.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">アイテムショップ</div>
+    <div class="nav-right">
+      <div class="coin-display">所持コイン: <span id="ui-coin">0</span> C</div>
+      <a href="../../index.html" class="btn back-btn">◀ ホームに戻る</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1 class="page-title">ショップ</h1>
+    
+    <div class="shop-grid">
+      <!--
+        ★ポイント：商品を追加したい時は、この div のセットをコピペして
+        data-id, data-price, data-name の3つを書き換えるだけでOK！
+      -->
+      
+      <!--
+      <div class="shop-item" data-id="test_message" data-price="10" data-name="テスト用メッセージ">
+        <h3>テスト用メッセージ</h3>
+        <p>購入すると、ホーム画面に隠しメッセージが表示されます。</p>
+        <div class="price">10 C</div>
+        <button class="btn buy-btn">購入する</button>
+      </div>
+      -->
+      
+      <!-- ラストウォーのアイテム -->
+            <div class="shop-item" data-id="l_plus" data-price="300" data-name="ラストウォー強化">
+              <h3>ラストウォー強化</h3>
+              <p>購入すると、ラストウォーで最初の人が一人増えます。</p>
+              <div class="price">300 C</div>
+              <button class="btn buy-btn">購入する</button>
+            </div>
+
+            <!-- イライラ棒のアイテム -->
+            <div class="shop-item" data-id="i_bougai_ikkokesu" data-price="300" data-name="イライラ棒 妨害消去">
+              <h3>イライラ棒の妨害一つ削除</h3>
+              <p>購入すると、イライラ棒の妨害ギミックが1つ消えます。</p>
+              <div class="price">300 C</div>
+              <button class="btn buy-btn">購入する</button>
+            </div>
+
+            <!-- 神経衰弱のアイテム -->
+            <div class="shop-item" data-id="s_miss_plus" data-price="300" data-name="神経衰弱 ミス上限+1">
+              <h3>神経衰弱でミス上限+1</h3>
+              <p>購入すると、神経衰弱でミスしていい回数が1回増えます。</p>
+              <div class="price">300 C</div>
+              <button class="btn buy-btn">購入する</button>
+            </div>
+
+            <!-- クリッカーゲームのアイテム -->
+            <div class="shop-item" data-id="c_30s_3bai" data-price="300" data-name="クリッカー 生産量3倍">
+              <h3>クリッカーの生産量一定時間3倍</h3>
+              <p>購入すると、クリッカーゲームで30秒間だけ生産量が3倍になります。</p>
+              <div class="price">300 C</div>
+              <button class="btn buy-btn">購入する</button>
+            </div>
+      
+    </div>
+  </main>
+
+  <!-- システムと、ショップ専用のJSを読み込む -->
+  <script src="../main.js"></script>
+  <script src="./shop.js"></script>
+</body>
+</html>
