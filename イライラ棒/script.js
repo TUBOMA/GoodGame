@@ -1,3 +1,4 @@
+// HTMLからゲームで使う要素を取得します。
 const gameArea = document.getElementById("gameArea");
 const startZone = document.getElementById("startZone");
 const goalZone = document.getElementById("goalZone");
@@ -5,6 +6,7 @@ const cursor = document.getElementById("cursor");
 const scoreText = document.getElementById("score");
 const restartButton = document.getElementById("restartButton");
 
+// ゲーム全体の状態を保存する変数です。
 let score = 0;
 let isPlaying = false;
 let isGameClear = false;
@@ -16,6 +18,8 @@ let playerY = 0;
 let playerRect = null;
 const pressedKeys = new Set();
 const playerSpeed = 190;
+
+// WASDと矢印キーを、同じ方向名に変換します。
 const keyMap = {
   w: "up",
   arrowup: "up",
@@ -27,10 +31,21 @@ const keyMap = {
   arrowright: "right"
 };
 
+// GameSystemが読み込まれている時だけ、指定した数のコインを追加します。
+function gainCoins(amount) {
+  if (typeof GameSystem !== "undefined") {
+    GameSystem.addCoins(amount);
+    console.log(`テストゲーム内で ${amount} コイン獲得しました！`);
+  } else {
+    console.error("GameSystemが見つかりません。HTMLでの読み込み順を確認してください。");
+  }
+}
+
 function cellKey(column, row) {
   return `${column},${row}`;
 }
 
+// 配列の順番をランダムに入れ替えます。コースや障害物のランダム生成で使います。
 function shuffle(items) {
   const shuffled = [...items];
 
@@ -48,6 +63,8 @@ function addOpenCell(openCells, column, row, columns, rows) {
   }
 }
 
+// 大きめのマスでランダムな一本道を作ります。
+// ここではまだ実際のゲーム画面の細かいマスには変換していません。
 function tryMakeCoarsePath(coarseColumns, coarseRows) {
   const goal = { column: coarseColumns - 1, row: coarseRows - 1 };
   const startCell = { column: 0, row: 0 };
@@ -93,6 +110,7 @@ function tryMakeCoarsePath(coarseColumns, coarseRows) {
   return null;
 }
 
+// ランダム生成に失敗した時用の予備ルートです。
 function makeFallbackCoarsePath(coarseColumns, coarseRows) {
   const path = [];
 
@@ -111,6 +129,7 @@ function makeFallbackCoarsePath(coarseColumns, coarseRows) {
   return path;
 }
 
+// 大きめのマスで作った道を、実際のゲーム画面のマス位置に変換します。
 function coarseToActual(cell, columns, rows) {
   return {
     column: Math.min(columns - 1, cell.column * 2),
@@ -118,6 +137,7 @@ function coarseToActual(cell, columns, rows) {
   };
 }
 
+// 現在地から目的地まで、1マスずつ直線で道をつなぎます。
 function addLineToPath(path, target) {
   const last = path[path.length - 1];
   let column = last.column;
@@ -134,6 +154,7 @@ function addLineToPath(path, target) {
   }
 }
 
+// 大きめの道データを、実際に壁を置くための1マス幅の道データに変換します。
 function makeActualPath(coarsePath, columns, rows) {
   const path = [coarseToActual(coarsePath[0], columns, rows)];
 
@@ -146,6 +167,7 @@ function makeActualPath(coarsePath, columns, rows) {
   return path;
 }
 
+// 複数回ランダム生成して、できるだけ長い一本道を採用します。
 function makePath(columns, rows) {
   const coarseColumns = Math.ceil(columns / 2);
   const coarseRows = Math.ceil(rows / 2);
@@ -162,6 +184,7 @@ function makePath(columns, rows) {
   return makeActualPath(bestPath || makeFallbackCoarsePath(coarseColumns, coarseRows), columns, rows);
 }
 
+// STARTやGOALを、対応するマスの中に配置します。
 function placeZone(zone, column, row, cellWidth, cellHeight, areaHeight) {
   const padding = 6;
   const width = Math.max(34, cellWidth - padding * 2);
@@ -179,6 +202,7 @@ function placeZone(zone, column, row, cellWidth, cellHeight, areaHeight) {
   zone.style.fontSize = `${Math.max(0.58, Math.min(0.86, cellWidth / 82))}rem`;
 }
 
+// コース全体を作り直します。道以外のマスには壁を置きます。
 function generateCourse() {
   const oldObstacles = gameArea.querySelectorAll(".wall, .hazard");
 
@@ -222,6 +246,7 @@ function generateCourse() {
   resetPlayerToStart();
 }
 
+// 指定した道のマスが横方向・縦方向・曲がり角のどれかを調べます。
 function getPathDirection(pathCells, index) {
   const previous = pathCells[index - 1];
   const next = pathCells[index + 1];
@@ -241,6 +266,7 @@ function getPathDirection(pathCells, index) {
   return "corner";
 }
 
+// 障害物を置いてよい「直線部分」かどうかを調べます。
 function isStraightPathCell(pathCells, index) {
   const previous = pathCells[index - 1];
   const current = pathCells[index];
@@ -259,6 +285,7 @@ function isStraightPathCell(pathCells, index) {
   );
 }
 
+// 障害物が隣同士に並ばないようにチェックします。
 function isNextToHazard(cell, selectedCells) {
   return selectedCells.some((selected) => {
     const columnDistance = Math.abs(cell.column - selected.column);
@@ -268,6 +295,7 @@ function isNextToHazard(cell, selectedCells) {
   });
 }
 
+// 道の直線部分にカッターを置きます。曲がり角と隣接配置は避けます。
 function addHazards(pathCells, cellWidth, cellHeight) {
   const candidateCells = pathCells
     .map((cell, index) => ({ ...cell, index }))
@@ -307,11 +335,13 @@ function addHazards(pathCells, cellWidth, cellHeight) {
   });
 }
 
+// スコア表示を更新します。
 function updateScore(nextScore) {
   score = nextScore;
   scoreText.textContent = String(score);
 }
 
+// プレイ状態を初期状態に戻します。スコアはここでは変えません。
 function resetRound() {
   isPlaying = false;
   isGameClear = false;
@@ -320,12 +350,14 @@ function resetRound() {
   cursor.style.display = "block";
 }
 
+// リスタートボタン用です。スコアを0にしてコースも作り直します。
 function restartGame() {
   updateScore(0);
   resetRound();
   generateCourse();
 }
 
+// 2つの四角形が重なっているかを判定します。
 function rectsOverlap(a, b) {
   return (
     a.left < b.right &&
@@ -335,6 +367,7 @@ function rectsOverlap(a, b) {
   );
 }
 
+// プレイヤーの当たり判定用の四角形を作ります。
 function getCursorRect(x, y) {
   const radius = 9;
   return {
@@ -345,10 +378,12 @@ function getCursorRect(x, y) {
   };
 }
 
+// プレイヤーの現在位置から当たり判定を更新します。
 function updatePlayerRect() {
   playerRect = getCursorRect(playerX, playerY);
 }
 
+// プレイヤーを指定位置へ移動します。ゲームエリア外には出ないように制限します。
 function movePlayerTo(x, y) {
   const areaRect = gameArea.getBoundingClientRect();
   playerX = Math.min(areaRect.right - 11, Math.max(areaRect.left + 11, x));
@@ -359,6 +394,7 @@ function movePlayerTo(x, y) {
   cursor.style.top = `${playerY - areaRect.top}px`;
 }
 
+// プレイヤーをSTARTの中央に戻します。
 function resetPlayerToStart() {
   const startRect = startZone.getBoundingClientRect();
 
@@ -368,6 +404,7 @@ function resetPlayerToStart() {
   );
 }
 
+// 壁やカッターに触れているかを調べます。
 function hitObstacle(cursorRect) {
   const obstacles = document.querySelectorAll(".wall, .hazard");
 
@@ -380,6 +417,7 @@ function hitObstacle(cursorRect) {
   return false;
 }
 
+// ミスした時の処理です。STARTに戻して画面を少し揺らします。
 function failRound() {
   resetRound();
   resetPlayerToStart();
@@ -390,11 +428,14 @@ function failRound() {
   }, 260);
 }
 
+// ゴールした時の処理です。スコアを増やして次のコースを生成します。
 function clearRound() {
   isGameClear = true;
   isPlaying = false;
   pressedKeys.clear();
   updateScore(score + 100);
+  gainCoins(100);
+
   gameArea.classList.remove("is-playing");
 
   window.setTimeout(() => {
@@ -405,6 +446,7 @@ function clearRound() {
 
 restartButton.addEventListener("click", restartGame);
 
+// 何か移動キーが押されているかを調べます。
 function hasMovementInput() {
   return (
     pressedKeys.has("up") ||
@@ -414,6 +456,8 @@ function hasMovementInput() {
   );
 }
 
+// 毎フレーム呼ばれるゲームのメイン処理です。
+// キー入力、移動、壁/障害物/ゴール判定をここで行います。
 function updateGame(currentTime) {
   const deltaTime = Math.min(0.04, (currentTime - lastFrameTime) / 1000 || 0);
   lastFrameTime = currentTime;
@@ -461,6 +505,7 @@ function updateGame(currentTime) {
   animationId = window.requestAnimationFrame(updateGame);
 }
 
+// キーを押した時、WASDまたは矢印キーなら移動状態として記録します。
 window.addEventListener("keydown", (event) => {
   const key = keyMap[event.key.toLowerCase()];
 
@@ -470,6 +515,7 @@ window.addEventListener("keydown", (event) => {
   }
 });
 
+// キーを離した時、移動状態から外します。
 window.addEventListener("keyup", (event) => {
   const key = keyMap[event.key.toLowerCase()];
 
@@ -478,6 +524,7 @@ window.addEventListener("keyup", (event) => {
   }
 });
 
+// 画面サイズが変わったら、マスの大きさも変わるのでコースを作り直します。
 window.addEventListener("resize", () => {
   window.clearTimeout(resizeTimer);
   resizeTimer = window.setTimeout(() => {
@@ -486,6 +533,7 @@ window.addEventListener("resize", () => {
   }, 180);
 });
 
+// 最初の準備です。コースを作り、ゲームループを開始します。
 resetRound();
 generateCourse();
 animationId = window.requestAnimationFrame(updateGame);

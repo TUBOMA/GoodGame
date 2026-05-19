@@ -8,17 +8,19 @@
 </head>
 <body>
   <main class="app">
+    <!-- スコアと操作説明を表示する上部エリアです。 -->
     <section class="top-bar" aria-label="ゲーム情報">
       <div class="info-box">
         <span class="label">スコア</span>
         <span id="score" class="value">0</span>
       </div>
       <div class="info-box control-box">
-        <span class="label">操作方法</span>
+        <span class="label">操作</span>
         <span class="control-text">WASD または 矢印キーで移動</span>
       </div>
     </section>
 
+    <!-- ゲーム本体です。壁や障害物はJavaScriptでこの中に生成されます。 -->
     <section class="game-panel" aria-label="イライラ棒ゲーム">
       <div id="gameArea" class="game-area">
         <div id="startZone" class="zone start-zone">START</div>
@@ -27,12 +29,19 @@
       </div>
     </section>
 
+    <!-- ゲームをやり直すボタンと、ホーム画面へ戻るリンクです。 -->
     <div class="actions">
       <button id="restartButton" type="button">リスタート</button>
       <a class="button-link" href="../index.html">メイン画面へ</a>
     </div>
   </main>
 
+
   <script src="script.js"></script>
+
+  <script src="../common/main.js"></script>
+  <!-- その後に、このテストゲーム専用のJSを読み込む -->
+  <script src="./script.js"></script>
+
 </body>
 </html>
