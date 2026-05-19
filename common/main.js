@@ -1,8 +1,39 @@
+// common/main.js
+
+// セーブデータを保存するたった1つのキー名
+const SAVE_KEY = 'good_game_save_data';
+
+// 誰もセーブデータを持っていない時の「初期データ」
+const DEFAULT_SAVE_DATA = {
+  common: {
+    coins: 0,
+    ownedItems: []
+  },
+  games: {} // 各ゲームのデータは最初カラッポ
+};
+
 // ゲーム全体の共通システム
 const GameSystem = {
-  // --- コイン管理 ---
+  // ==========================================
+  // 【基盤】 セーブデータの読み書き（ここですべてを管理）
+  // ==========================================
+  
+  // セーブデータ全体をロードする（なければ初期データを返す）
+  _loadAll: function() {
+    const dataString = localStorage.getItem(SAVE_KEY);
+    return dataString ? JSON.parse(dataString) : JSON.parse(JSON.stringify(DEFAULT_SAVE_DATA));
+  },
+
+  // セーブデータ全体を保存する
+  _saveAll: function(dataObj) {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(dataObj));
+  },
+
+  // ==========================================
+  // 【共通機能】 コイン・アイテム管理
+  // ==========================================
   getCoins: function() {
-    return parseInt(localStorage.getItem('total_coins')) || 0;
+    return this._loadAll().common.coins;
   },
 
   updateUIDisplay: function() {
@@ -13,41 +44,61 @@ const GameSystem = {
   },
 
   addCoins: function(amount) {
-    const newCoins = this.getCoins() + amount;
-    localStorage.setItem('total_coins', newCoins);
+    const data = this._loadAll();
+    data.common.coins += amount;
+    this._saveAll(data);
     this.updateUIDisplay();
   },
 
-  // --- アイテム管理 ---
+  consumeCoins: function(amount) {
+    const data = this._loadAll();
+    if (data.common.coins < amount) return false;
+    
+    data.common.coins -= amount;
+    this._saveAll(data);
+    this.updateUIDisplay();
+    return true;
+  },
+
   getOwnedItems: function() {
-    const items = localStorage.getItem('owned_items');
-    return items ? JSON.parse(items) : [];
+    return this._loadAll().common.ownedItems;
   },
 
   hasItem: function(itemId) {
     return this.getOwnedItems().includes(itemId);
   },
 
-  // ★ここが新しくなった「安全なトランザクション処理」
   tryPurchaseItem: function(itemId, price) {
-    const items = this.getOwnedItems();
-    const currentCoins = this.getCoins();
+    const data = this._loadAll();
+    
+    if (data.common.ownedItems.includes(itemId)) return 'ALREADY_OWNED';
+    if (data.common.coins < price) return 'NO_COINS';
 
-    // 1. 事前チェック（ここなら途中でやめてもデータは壊れない）
-    if (items.includes(itemId)) return 'ALREADY_OWNED';
-    if (currentCoins < price) return 'NO_COINS';
-
-    // 2. データ上の決済とアイテム追加
-    const newCoins = currentCoins - price;
-    items.push(itemId);
-
-    // 3. 一気にセーブ（不整合を防ぐ）
-    localStorage.setItem('total_coins', newCoins);
-    localStorage.setItem('owned_items', JSON.stringify(items));
+    // 決済とアイテム付与を1つのデータセット内で同時に行う
+    data.common.coins -= price;
+    data.common.ownedItems.push(itemId);
+    
+    this._saveAll(data); // 一気にセーブ
     this.updateUIDisplay();
-
-    // アラートなどの「見た目」の処理はここでは一切やらない！
     return 'SUCCESS';
+  },
+
+  // ==========================================
+  // 【ゲーム個別】 自由なデータの保存・読み込み
+  // ==========================================
+  
+  // 特定のゲームのデータを取得する
+  loadGameData: function(gameId) {
+    const data = this._loadAll();
+    // もしそのゲームのデータがまだ無ければ、空のオブジェクトを返す
+    return data.games[gameId] || {};
+  },
+
+  // 特定のゲームのデータを保存する（コイン等には一切影響しない）
+  saveGameData: function(gameId, gameDataObj) {
+    const data = this._loadAll();
+    data.games[gameId] = gameDataObj; // そのゲームの箱の中身を丸ごと上書き
+    this._saveAll(data);
   }
 };
 
@@ -56,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
   GameSystem.updateUIDisplay();
 });
 
-// 通信の窓口
+// 通信の窓口（変更なし）
 window.addEventListener('message', function(event) {
   const data = event.data;
   if (!data) return;
