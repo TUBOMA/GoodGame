@@ -49,3 +49,25 @@ canvas {
   background-color: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px); /* 少し上にフワッと浮く */
 }
+
+
+.back-to-home {
+  position: absolute;   /* 画面から浮かせて配置 */
+  top: 20px;            /* 上からの位置 */
+  left: 20px;           /* 左からの位置 */
+  padding: 10px 16px;
+  background-color: rgba(255, 255, 255, 0.1); /* 半透明の白 */
+  color: #f5f7fb;       /* 現在の文字色と同じ */
+  text-decoration: none;/* 下線を消す */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;   /* 角を丸くする */
+  font-weight: bold;
+  font-size: 14px;
+  z-index: 1000;        /* ゲーム画面（Canvas）より手前に表示する */
+  transition: all 0.2s ease; /* ホバー時のアニメーション設定 */
+}
+
+.back-to-home:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px); /* 少し上にフワッと浮く */
+}

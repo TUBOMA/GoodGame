@@ -2,17 +2,85 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>GOOD GAME</title>
+  <title>GOOD GAME - ホーム</title>
+  <link rel="stylesheet" href="./common/main.css">
 </head>
 <body>
-  <h1>ホーム画面</h1>
-  <p>遊びたいゲームを選んでください</p>
-  
-  <div>
-    <a href="./イライラ棒/index.html"><button>イライラ棒</button></a>
-    <a href="./マインスイーパー/index.html"><button>マインスイーパー</button></a>
-    <a href="./ラストウォー/index.html"><button>ラストウォー</button></a>
-    <a href="./ソリティア/index.html"><button>ソリティア</button></a>
+
+    <!-- 上部のナビゲーションバー -->
+      <header class="navbar">
+        <div class="logo">GOOD GAME</div>
+        <div class="nav-right">
+          <div class="coin-display">所持コイン: <span id="ui-coin">0</span> C</div>
+          
+          <!-- ★追加：実績ボタン -->
+          <a href="./common/achievements/index.html" class="btn shop-btn" style="background-color: #3498db; margin-right: 10px;">🏆 実績</a>
+          
+          <a href="./common/shop/index.html" class="btn shop-btn">🛒 ショップ</a>
+        </div>
+      </header>
+
+  <main class="container">
+    <h1 class="page-title">ゲームを選ぶ</h1>
+    <!--
+    <div id="secret-message" style="display: none; background: #ffeaa7; padding: 15px; text-align: center; border-radius: 8px; margin-bottom: 20px; font-weight: bold; color: #d35400;">
+      🎉 テスト用メッセージの購入ありがとうございます！この文字は購入者限定です！
+    </div>
+    -->
+    
+    <div class="game-grid">
+      <a href="./イライラ棒/index.html" class="game-card">
+        <h2>イライラ棒</h2>
+        <p>マウスの集中力が試される！</p>
+      </a>
+      
+      <a href="./マインスイーパー/index.html" class="game-card">
+        <h2>クリッカーゲーム</h2>
+        <p>一人遊びの王道</p>
+
+      </a>
+      
+      <a href="./ラストウォー/index.html" class="game-card">
+        <h2>ラストウォー</h2>
+        <p>生き残りをかけた戦い</p>
+      </a>
+      
+      <a href="./ソリティア/index.html" class="game-card">
+        <h2>神経衰弱</h2>
+        <p>定番の思考型パズル</p>
+      </a>
+      
+      <!--
+      <a href="./test/index.html" class="game-card">
+        <h2>動作テスト用</h2>
+        <p>コインの追加テスト</p>
+      </a>
+      -->
+    
+    </div>
+
+    <div style="text-align: center; margin-top: 60px;">
+      <button id="btn-trigger-reset" class="btn back-btn" style="background-color: #7f8c8d;">データを初期化する</button>
+    </div>
+
+  </main>
+
+  <div id="reset-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h2 id="modal-title">⚠️ 警告</h2>
+      <p id="modal-text">すべてのデータ（所持コイン、購入したアイテム）を消去します。本当によろしいですか？</p>
+      <div class="modal-buttons">
+        <button id="btn-cancel-reset" class="btn back-btn">やめる</button>
+        <button id="btn-next-reset" class="btn danger-btn">はい、消去します</button>
+      </div>
+    </div>
   </div>
+
+  <script src="./common/main.js"></script>
+  
+  <script src="./common/reset.js"></script>
+  
+  <script src="./common/home.js"></script>
+
 </body>
 </html>
