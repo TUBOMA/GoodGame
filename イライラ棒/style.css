@@ -13,9 +13,7 @@ body {
     linear-gradient(135deg, #111827 0%, #1e293b 46%, #14213d 100%);
 }
 
-
 /* ボタンとリンクボタンの見た目をそろえます。 */
-
 button,
 .button-link {
   border: 0;
