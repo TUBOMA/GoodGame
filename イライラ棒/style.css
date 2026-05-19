@@ -12,7 +12,8 @@ body {
     linear-gradient(135deg, #111827 0%, #1e293b 46%, #14213d 100%);
 }
 
-button {
+button,
+.button-link {
   border: 0;
   border-radius: 8px;
   padding: 12px 18px;
@@ -21,10 +22,12 @@ button {
   color: #0f172a;
   background: #facc15;
   cursor: pointer;
+  text-decoration: none;
   transition: transform 0.16s ease, background 0.16s ease;
 }
 
-button:hover {
+button:hover,
+.button-link:hover {
   transform: translateY(-1px);
   background: #fde047;
 }
