@@ -102,6 +102,7 @@ class RunnerScene extends Phaser.Scene {
   handleRestartInput() {
     if (this.gameState !== "playing") {
       this.startGame();
+
     }
   }
 
@@ -258,7 +259,8 @@ class RunnerScene extends Phaser.Scene {
       typeof GameSystem.hasItem === "function" &&
       GameSystem.hasItem(Start_Plus_Item_Id)
     ) {
-      return Start_Population + 1;
+
+      return Start_Population +  GameSystem.getItemCount(Start_Plus_Item_Id);
     }
 
     return Start_Population;

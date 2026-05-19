@@ -103,7 +103,7 @@ const Phases = [
   },
 ];
 
-// ゲートに入ったときの人数計算
+//ゲートに入ったときの人数計算
 //もし人がゲートを通ったらの処理
 function Calculate_Population(currentPopulation, gate) {
   //ゲートの種類によって計算を変える

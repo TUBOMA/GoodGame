@@ -33,6 +33,7 @@ function Create_One_Strict_Phase(phaseSetting, startPopulation) {
   throw new Error(`${phaseSetting.name} の問題生成に失敗しました`);
 }
 
+//主なゲート生成の場所
 function Create_One_Phase_Once(phaseSetting, startPopulation) {
   const phase = Copy_Phase_Setting(phaseSetting);
   phase.gates = [];
