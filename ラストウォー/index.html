@@ -4,9 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Simple Gate Runner</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=fixrun3" />
   </head>
   <body>
+    <a href="../index.html" class="back-to-home">◀ ホームに戻る</a>
     <main id="game-wrap">
       <div id="game"></div>
     </main>
@@ -16,18 +17,20 @@
 
     <!-- コードの呼び出す場所。上から順に呼ぶ -->
     <!-- フェーズごとの設定 -->
-    <script src="src/settings.js"></script>
+    <script src="src/settings.js?v=fixrun3"></script>
+    <!-- ゲート問題のランダム生成 -->
+    <script src="src/GateGenerator.js?v=fixrun3"></script>
     <!-- 背景関係の描画を管理 -->
-    <script src="src/RoadView.js"></script>
+    <script src="src/RoadView.js?v=fixrun3"></script>
     <!-- プレイヤーの描画を管理 -->
-    <script src="src/PlayerView.js"></script>
+    <script src="src/PlayerView.js?v=fixrun3"></script>
     <!-- UIの描画を管理 -->
-    <script src="src/HudView.js"></script>
+    <script src="src/HudView.js?v=fixrun3"></script>
     <!-- 道の上の物をPhaserの機能で作り出す -->
-    <script src="src/FallingObjectFactory.js"></script>
+    <script src="src/FallingObjectFactory.js?v=fixrun3"></script>
     <!-- 全体のフェーズ管理 -->
-    <script src="src/RunnerScene.js"></script>
+    <script src="src/RunnerScene.js?v=fixrun3"></script>
     <!-- Phaserの起動 -->
-    <script src="main.js"></script>
+    <script src="main.js?v=fixrun3"></script>
   </body>
 </html>

@@ -1,6 +1,6 @@
 "use strict";
 
-// プレイヤーの見た目と左右移動を担当するクラス
+//プレイヤーの見た目と左右移動を担当するクラス
 class PlayerView {
   constructor(scene) {
     //プレイヤー表示の作成
@@ -10,17 +10,21 @@ class PlayerView {
     this.container = this.scene.add.container(Left_Lane_X, Player_Y);
     this.container.setDepth(40);
 
-    this.body = this.scene.add.circle(0, 0, 23, 0x3ddc97);
+    this.shadow = this.scene.add.ellipse(4, 8, 54, 24, 0x000000, 0.24);
+    this.outerRing = this.scene.add.circle(0, 0, 29, 0xffffff, 0.24);
+    this.body = this.scene.add.circle(0, 0, 23, 0x4fe3a1);
     this.dots = this.scene.add.graphics();
-    this.populationText = this.scene.add.text(0, 36, "", {
+    this.populationText = Add_Text(this.scene, 0, 36, "", {
       fontFamily: "sans-serif",
-      fontSize: "20px",
+      fontSize: `${20}px`,
       color: "#ffffff",
       fontStyle: "bold",
+      stroke: "#13261f",
+      strokeThickness: 3,
     });
     this.populationText.setOrigin(0.5);
 
-    this.container.add([this.body, this.dots, this.populationText]);
+    this.container.add([this.shadow, this.outerRing, this.body, this.dots, this.populationText]);
   }
 
   resetLane() {
@@ -33,6 +37,7 @@ class PlayerView {
     //プレイヤーを指定レーンへ動かす処理
     this.currentLane = lane;
 
+    //
     const targetX = lane === Lane.Left ? Left_Lane_X : Right_Lane_X;
     this.scene.tweens.add({
       targets: this.container,
@@ -61,6 +66,7 @@ class PlayerView {
     const firstX = -((dotCount - 1) * circleGap) / 2;
 
     this.dots.fillStyle(0xffffff, 0.92);
+
 
     for (let i = 0; i < dotCount; i += 1) {
       const x = firstX + i * circleGap;
