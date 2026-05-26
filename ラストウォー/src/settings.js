@@ -33,6 +33,9 @@ const Right_Lane_X = 335;
 const Start_Population = 5;
 // ベストタイムをブラウザに保存するときの名前
 const Best_Time_Key = "simpleGateRunnerBestTime";
+//タイムアタックの解放状態とベストタイムを保存するときの名前
+const Time_Attack_Unlocked_Key = "simpleGateRunnerTimeAttackUnlocked";
+const Time_Attack_Best_Time_Key = "simpleGateRunnerTimeAttackBestTime";
 //共通ゲームシステムで使う、このゲームのID
 const Game_System_Id = "lastwar";
 //最初の人数を1人増やすアイテムのID
@@ -43,6 +46,20 @@ const Lane = {
   Left: "left",
   Right: "right",
 };
+
+//通常プレイかタイムアタックかを表す値
+const Play_Mode = {
+  Normal: "normal",
+  Time_Attack: "timeAttack",
+};
+
+function Get_Play_Mode_Label(playMode) {
+  if (playMode === Play_Mode.Time_Attack) {
+    return "TIME ATTACK";
+  }
+
+  return "NORMAL";
+}
 
 
 //各フェーズの内容を管理

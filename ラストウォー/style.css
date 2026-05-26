@@ -1,73 +1,218 @@
+:root {
+  --page-background: #182334;
+  --panel-background: #101a2d;
+  --panel-border: #344258;
+  --playfield-background: #0b1222;
+  --cyan-border: #36c5fa;
+  --mint-label: #9cf2d7;
+  --main-text: #e3edf8;
+  --yellow-button: #ffc914;
+  --yellow-hover: #ffd643;
+  --button-text: #0f1a2d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 html,
 body {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   margin: 0;
 }
 
 body {
-  background: radial-gradient(circle at 50% 20%, #223143 0%, #111820 46%, #070b10 100%);
-  color: #f5f7fb;
+  min-height: 100svh;
+  background: var(--page-background);
+  color: var(--main-text);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-#game-wrap {
-  width: 100%;
-  min-height: 100%;
+.arcade-shell {
+  width: min(100%, 416px);
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.status-row {
   display: grid;
-  place-items: center;
+  grid-template-columns: 104px 1fr;
+  gap: 8px;
+}
+
+.status-panel,
+.playfield-panel,
+.action-panel {
+  border: 2px solid var(--panel-border);
+  border-radius: 8px;
+  background: var(--panel-background);
+}
+
+.population-panel {
+  min-height: 78px;
+  padding: 10px 13px;
+}
+
+.status-label {
+  margin: 0 0 5px;
+  color: var(--mint-label);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.population-value {
+  color: var(--main-text);
+  font-size: 36px;
+  line-height: 1;
+}
+
+.progress-panel {
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: center;
+}
+
+.status-value {
+  display: block;
+  color: var(--main-text);
+  font-size: 17px;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.playfield-panel {
+  padding: 8px;
+  display: flex;
+  justify-content: center;
+  min-height: 0;
+}
+
+.canvas-frame {
+  /* 画面が低い端末では、縦長のゲーム比率のまま全体を縮める */
+  width: min(368px, calc((100svh - 230px) * 2 / 3 + 8px), 100%);
+  min-height: 0;
+  border: 4px solid var(--cyan-border);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--playfield-background);
 }
 
 #game {
-  width: min(100vw, 520px);
-  height: min(100vh, 780px);
+  width: 100%;
+  aspect-ratio: 2 / 3;
 }
 
 canvas {
   display: block;
   image-rendering: auto;
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.38);
+}
+
+.action-panel {
+  min-height: 58px;
+  padding: 8px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+}
+
+.mode-indicator {
+  padding-left: 6px;
+}
+
+.mode-indicator .status-label {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.mode-value {
+  display: block;
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.mode-value.time-attack {
+  color: var(--mint-label);
 }
 
 .back-to-home {
-  position: absolute;   /* 画面から浮かせて配置 */
-  top: 20px;            /* 上からの位置 */
-  left: 20px;           /* 左からの位置 */
+  position: absolute;
+  top: 20px;
+  left: 20px;
   padding: 10px 16px;
-  background-color: rgba(255, 255, 255, 0.1); /* 半透明の白 */
-  color: #f5f7fb;       /* 現在の文字色と同じ */
-  text-decoration: none;/* 下線を消す */
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #f5f7fb;
+  text-decoration: none;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;   /* 角を丸くする */
+  border-radius: 8px;
   font-weight: bold;
   font-size: 14px;
-  z-index: 1000;        /* ゲーム画面（Canvas）より手前に表示する */
-  transition: all 0.2s ease; /* ホバー時のアニメーション設定 */
+  z-index: 1000;
+  transition: all 0.2s ease;
 }
 
 .back-to-home:hover {
   background-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px); /* 少し上にフワッと浮く */
+  transform: translateY(-2px);
 }
 
+@media (max-width: 560px) {
+  .arcade-shell {
+    padding: 8px;
+    gap: 8px;
+  }
 
-.back-to-home {
-  position: absolute;   /* 画面から浮かせて配置 */
-  top: 20px;            /* 上からの位置 */
-  left: 20px;           /* 左からの位置 */
-  padding: 10px 16px;
-  background-color: rgba(255, 255, 255, 0.1); /* 半透明の白 */
-  color: #f5f7fb;       /* 現在の文字色と同じ */
-  text-decoration: none;/* 下線を消す */
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;   /* 角を丸くする */
-  font-weight: bold;
-  font-size: 14px;
-  z-index: 1000;        /* ゲーム画面（Canvas）より手前に表示する */
-  transition: all 0.2s ease; /* ホバー時のアニメーション設定 */
-}
+  .status-row {
+    grid-template-columns: 90px 1fr;
+    gap: 8px;
+  }
 
-.back-to-home:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px); /* 少し上にフワッと浮く */
+  .population-panel {
+    min-height: 68px;
+    padding: 9px 11px;
+  }
+
+  .population-value {
+    font-size: 32px;
+  }
+
+  .progress-panel {
+    padding: 9px 10px;
+    gap: 7px;
+  }
+
+  .status-label {
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+
+  .status-value {
+    font-size: 14px;
+  }
+
+  .playfield-panel {
+    padding: 6px;
+  }
+
+  .action-panel {
+    min-height: 50px;
+    padding: 7px;
+  }
+
+  .mode-indicator {
+    padding-left: 3px;
+  }
+
+  .mode-value {
+    font-size: 12px;
+  }
+
 }

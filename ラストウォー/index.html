@@ -4,12 +4,46 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Simple Gate Runner</title>
-    <link rel="stylesheet" href="style.css?v=fixrun3" />
+    <link rel="stylesheet" href="style.css?v=home-button-restore" />
   </head>
   <body>
     <a href="../index.html" class="back-to-home">◀ ホームに戻る</a>
-    <main id="game-wrap">
-      <div id="game"></div>
+
+    <main class="arcade-shell">
+      <header class="status-row">
+        <section class="status-panel population-panel">
+          <p class="status-label">人数</p>
+          <strong id="outside-population" class="population-value">5</strong>
+        </section>
+
+        <section class="status-panel progress-panel">
+          <div class="status-block">
+            <p class="status-label">PHASE</p>
+            <strong id="outside-phase" class="status-value">1 / 5</strong>
+          </div>
+          <div class="status-block">
+            <p class="status-label">TIME</p>
+            <strong id="outside-time" class="status-value">0.00s</strong>
+          </div>
+          <div class="status-block">
+            <p class="status-label">BEST</p>
+            <strong id="outside-best" class="status-value">--</strong>
+          </div>
+        </section>
+      </header>
+
+      <section class="playfield-panel">
+        <div class="canvas-frame">
+          <div id="game"></div>
+        </div>
+      </section>
+
+      <footer class="action-panel">
+        <div class="mode-indicator">
+          <span class="status-label">MODE</span>
+          <strong id="outside-mode" class="mode-value">NORMAL</strong>
+        </div>
+      </footer>
     </main>
 
     <!-- Phaserをネット経由で呼び出すことでweb上で使えるようにする -->
@@ -20,21 +54,21 @@
      <!-- 互換機能の追加 -->
     <script src="../common/main.js"></script>
     <!-- フェーズごとの設定 -->
-    <script src="src/settings.js?v=fixrun3"></script>
+    <script src="src/settings.js?v=time-attack2"></script>
     <!-- ゲート問題のランダム生成 -->
-    <script src="src/GateGenerator.js?v=fixrun3"></script>
+    <script src="src/GateGenerator.js?v=frame-ui"></script>
     <!-- 背景関係の描画を管理 -->
-    <script src="src/RoadView.js?v=fixrun3"></script>
+    <script src="src/RoadView.js?v=frame-ui"></script>
     <!-- プレイヤーの描画を管理 -->
-    <script src="src/PlayerView.js?v=fixrun3"></script>
+    <script src="src/PlayerView.js?v=frame-ui"></script>
     <!-- UIの描画を管理 -->
-    <script src="src/HudView.js?v=fixrun3"></script>
+    <script src="src/HudView.js?v=time-attack2"></script>
     <!-- 道の上の物をPhaserの機能で作り出す -->
-    <script src="src/FallingObjectFactory.js?v=fixrun3"></script>
+    <script src="src/FallingObjectFactory.js?v=frame-ui"></script>
   
     <!-- 全体のフェーズ管理 -->
-    <script src="src/RunnerScene.js?v=fixrun3"></script>
+    <script src="src/RunnerScene.js?v=time-attack2"></script>
     <!-- Phaserの起動 -->
-    <script src="main.js?v=fixrun3"></script>
+    <script src="main.js?v=frame-ui"></script>
   </body>
 </html>

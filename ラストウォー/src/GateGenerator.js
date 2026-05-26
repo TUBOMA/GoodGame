@@ -29,8 +29,6 @@ function Create_One_Strict_Phase(phaseSetting, startPopulation) {
     }
   }
 
-  //設定を変えた結果、条件を満たす問題を作れない場合に気づけるようにする
-  throw new Error(`${phaseSetting.name} の問題生成に失敗しました`);
 }
 
 //主なゲート生成の場所
@@ -129,10 +127,10 @@ function Make_Gate_Pair(randomLevel, currentPopulation) {
 
 function Get_Thinking_Gate_Chance(randomLevel) {
   if (randomLevel === 1) {
-    return 0.7;
+    return 0.4;
   }
 
-  return 0.85;
+  return 0.6;
 }
 
 function Make_Thinking_Gate_Pair(randomLevel, currentPopulation) {

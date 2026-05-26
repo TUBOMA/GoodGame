@@ -9,8 +9,16 @@ class RunnerScene extends Phaser.Scene {
   }
   
   create() {
-    //ローカルストレージ内からベストスコアの情報を持ってくる
+    //ローカルストレージ内からモードごとのベストタイムを持ってくる
     this.bestTime = Number(localStorage.getItem(Best_Time_Key) || 0);
+    this.timeAttackBestTime = Number(localStorage.getItem(Time_Attack_Best_Time_Key) || 0);
+    this.isTimeAttackUnlocked = localStorage.getItem(Time_Attack_Unlocked_Key) === "true";
+    this.playMode = Play_Mode.Normal;
+
+    //すでに通常モードをクリアしていた場合も、追加されたモードを遊べるようにする
+    if (this.bestTime > 0) {
+      this.unlockTimeAttack();
+    }
 
     //各種クラスをここで初期化
     this.roadView = new RoadView(this);
@@ -40,15 +48,17 @@ class RunnerScene extends Phaser.Scene {
 
   //各種入力を処理する
   createInput() {
-    this.input.keyboard.on("keydown-LEFT", () => this.handleLaneInput(Lane.Left));
-    this.input.keyboard.on("keydown-A", () => this.handleLaneInput(Lane.Left));
-    this.input.keyboard.on("keydown-RIGHT", () => this.handleLaneInput(Lane.Right));
-    this.input.keyboard.on("keydown-D", () => this.handleLaneInput(Lane.Right));
+    this.input.keyboard.on("keydown-LEFT", (event) => this.handleLaneInput(Lane.Left, event));
+    this.input.keyboard.on("keydown-A", (event) => this.handleLaneInput(Lane.Left, event));
+    this.input.keyboard.on("keydown-RIGHT", (event) => this.handleLaneInput(Lane.Right, event));
+    this.input.keyboard.on("keydown-D", (event) => this.handleLaneInput(Lane.Right, event));
     this.input.keyboard.on("keydown-SPACE", () => this.handleRestartInput());
+    this.input.keyboard.on("keydown-T", () => this.handleTimeAttackInput());
   }
   //スタート画面の処理
   showStartScreen() {
     this.gameState = "ready";
+    this.playMode = Play_Mode.Normal;
     this.playPhases = null;
     this.population = this.getStartPopulation();
     this.phaseIndex = 0;
@@ -58,16 +68,17 @@ class RunnerScene extends Phaser.Scene {
     this.playerView.resetLane();
     this.playerView.updatePopulation(this.population);
     this.roadView.updateLaneHighlight(this.playerView.getCurrentLane());
-    this.hudView.showStartScreen();
+    this.hudView.showStartScreen(this.isTimeAttackUnlocked);
     this.updateHud();
   }
 
   //ゲームの実プレイ中の処理
-  startGame() {
+  startGame(playMode) {
     this.hudView.clearOverlay();
     this.clearFallingObject();
 
     this.gameState = "playing";
+    this.playMode = playMode || Play_Mode.Normal;
     //ゲーム開始時に、今回のプレイで使う全フェーズの数字を先に作る
     //ステージ生成はアイテムで増えた人数を考えず、基本の Start_Population で作る
     this.playPhases = Create_Random_Phases();
@@ -80,29 +91,69 @@ class RunnerScene extends Phaser.Scene {
     this.playerView.updatePopulation(this.population);
     this.roadView.updateLaneHighlight(this.playerView.getCurrentLane());
 
-    this.hudView.showCenterMessage("PHASE 1");
+    //通常モードではフェーズ開始を表示する
+    //タイムアタックではゲートをすぐ読みたいので、中央表示を出さない
+    if (!this.isTimeAttackMode()) {
+      this.hudView.showCenterMessage("PHASE 1");
+    }
     this.spawnNextObject();
     this.updateHud();
   }
   
   //左右入力をもらった時の処理
-  handleLaneInput(lane) {
+  handleLaneInput(lane, event) {
+    //タイムアタック中はキーを押しっぱなしにしても1問ずつ選ばせる
+    if (this.isTimeAttackMode() && event && event.repeat) {
+      return;
+    }
+
     //まだゲームが始まってなかったらゲームスタート
     //入力も受け付けとく
     if (this.gameState !== "playing") {
-      this.startGame();
+      //解放後は SPACE または T でモードを選んでから開始する
+      if (this.isTimeAttackUnlocked) {
+        return;
+      }
+
+      this.startGame(Play_Mode.Normal);
       this.movePlayerToLane(lane);
       return;
     }
-    //左右入力通り動かす
+
+    if (this.isTimeAttackMode()) {
+      this.handleTimeAttackLaneInput(lane);
+      return;
+    }
+
+    //通常モードでは、入力はレーン移動だけを行う
     this.movePlayerToLane(lane);
+  }
+
+  //タイムアタックでは左右入力がそのまま現在のゲートの回答になる
+  handleTimeAttackLaneInput(lane) {
+    this.movePlayerToLane(lane);
+
+    if (
+      this.fallingObject &&
+      this.fallingObject.type === "gate" &&
+      !this.fallingObject.isAlreadyUsed
+    ) {
+      this.applyTimeAttackChoice();
+    }
   }
 
   //リスタートボタンの処理
   handleRestartInput() {
     if (this.gameState !== "playing") {
-      this.startGame();
+      this.startGame(this.playMode);
 
+    }
+  }
+
+  //解放後に T キーでタイムアタックを開始する
+  handleTimeAttackInput() {
+    if (this.gameState !== "playing" && this.isTimeAttackUnlocked) {
+      this.startGame(Play_Mode.Time_Attack);
     }
   }
 
@@ -190,6 +241,37 @@ class RunnerScene extends Phaser.Scene {
     }
   }
 
+  //タイムアタック用: 選択を即座に確定して、次の問題へ進める
+  applyTimeAttackChoice() {
+    this.applySelectedGate();
+
+    if (this.gameState !== "playing") {
+      return;
+    }
+
+    this.clearFallingObject();
+    this.spawnNextObject();
+    this.processTimeAttackNonChoiceObjects();
+  }
+
+  //壁とゴールには左右の選択がないため、タイムアタックでは待たずに処理する
+  processTimeAttackNonChoiceObjects() {
+    while (
+      this.gameState === "playing" &&
+      this.fallingObject &&
+      this.fallingObject.type !== "gate"
+    ) {
+      this.handleFallingObject();
+
+      if (this.gameState !== "playing") {
+        return;
+      }
+
+      this.clearFallingObject();
+      this.spawnNextObject();
+    }
+  }
+
   getSelectedGate() {
     //今いるレーンのゲートを取り出す処理
     if (this.playerView.getCurrentLane() === Lane.Left) {
@@ -221,7 +303,7 @@ class RunnerScene extends Phaser.Scene {
     this.currentGatePairIndex = 0;
 
     //フェーズ終了時に
-    if (this.phaseIndex < this.playPhases.length) {
+    if (this.phaseIndex < this.playPhases.length && !this.isTimeAttackMode()) {
       this.hudView.showCenterMessage(this.playPhases[this.phaseIndex].name);
     }
   }
@@ -229,27 +311,49 @@ class RunnerScene extends Phaser.Scene {
   finishGame(didClear, reason) {
     // クリア・ゲームオーバー
     this.gameState = didClear ? "clear" : "gameover";
+    const didUnlockTimeAttack = didClear && !this.isTimeAttackUnlocked;
 
     if (didClear) {
       this.saveBestTime();
+      this.unlockTimeAttack();
       this.addClearCoins();
       this.saveGameSystemScore();
     }
 
-    this.hudView.showEndScreen(didClear, reason, this.elapsedSeconds, this.population);
+    this.hudView.showEndScreen(
+      didClear,
+      reason,
+      this.elapsedSeconds,
+      this.population,
+      this.playMode,
+      this.isTimeAttackUnlocked,
+      didUnlockTimeAttack,
+    );
     this.updateHud();
   }
 
-  //ベストタイム保存
+  //現在遊んでいるモードのベストタイムを保存
   saveBestTime() {
-    const isFirstClear = this.bestTime === 0;
-    const isNewRecord = this.elapsedSeconds < this.bestTime;
+    const bestTime = this.getCurrentBestTime();
+    const isFirstClear = bestTime === 0;
+    const isNewRecord = this.elapsedSeconds < bestTime;
 
     //最初の0で更新し続けないように条件を組む
     if (isFirstClear || isNewRecord) {
-      this.bestTime = this.elapsedSeconds;
-      localStorage.setItem(Best_Time_Key, String(this.bestTime));
+      if (this.isTimeAttackMode()) {
+        this.timeAttackBestTime = this.elapsedSeconds;
+        localStorage.setItem(Time_Attack_Best_Time_Key, String(this.timeAttackBestTime));
+      } else {
+        this.bestTime = this.elapsedSeconds;
+        localStorage.setItem(Best_Time_Key, String(this.bestTime));
+      }
     }
+  }
+
+  //一度クリアしたら、次回以降もタイムアタックを選択できるように保存する
+  unlockTimeAttack() {
+    this.isTimeAttackUnlocked = true;
+    localStorage.setItem(Time_Attack_Unlocked_Key, "true");
   }
 
   getStartPopulation() {
@@ -285,6 +389,7 @@ class RunnerScene extends Phaser.Scene {
       const myData = GameSystem.loadGameData(Game_System_Id) || {};
       myData.highScore = Math.max((myData.highScore || 0), currentScore);
       myData.bestTime = this.bestTime;
+      myData.timeAttackBestTime = this.timeAttackBestTime;
       GameSystem.saveGameData(Game_System_Id, myData);
     }
   }
@@ -294,7 +399,26 @@ class RunnerScene extends Phaser.Scene {
   updateHud() {
     //画面上の数値表示を更新
     const phase = this.getCurrentPhase();
-    this.hudView.update(this.population, this.phaseIndex, phase, this.elapsedSeconds, this.bestTime);
+    this.hudView.update(
+      this.population,
+      this.phaseIndex,
+      phase,
+      this.elapsedSeconds,
+      this.getCurrentBestTime(),
+      this.playMode,
+    );
+  }
+
+  getCurrentBestTime() {
+    if (this.isTimeAttackMode()) {
+      return this.timeAttackBestTime;
+    }
+
+    return this.bestTime;
+  }
+
+  isTimeAttackMode() {
+    return this.playMode === Play_Mode.Time_Attack;
   }
 
   getCurrentPhase() {

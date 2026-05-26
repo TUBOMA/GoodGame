@@ -5,6 +5,11 @@ class HudView {
   constructor(scene) {
     this.scene = scene;
     this.overlayGroup = null;
+    this.outsidePopulation = document.getElementById("outside-population");
+    this.outsidePhase = document.getElementById("outside-phase");
+    this.outsideTime = document.getElementById("outside-time");
+    this.outsideBest = document.getElementById("outside-best");
+    this.outsideMode = document.getElementById("outside-mode");
 
     this.populationText = Add_Text(this.scene, 18, 16, "", this.createTextStyle(24));
     this.phaseText = Add_Text(this.scene, 18, 48, "", this.createTextStyle(18));
@@ -26,6 +31,12 @@ class HudView {
     this.timeText.setDepth(100);
     this.bestText.setDepth(100);
     this.messageText.setDepth(100);
+
+    //上部パネルに表示する数値は、ゲーム画面内では重複表示しない
+    this.populationText.setVisible(false);
+    this.phaseText.setVisible(false);
+    this.timeText.setVisible(false);
+    this.bestText.setVisible(false);
   }
 
   //文字生成のためのやつ
@@ -41,7 +52,7 @@ class HudView {
   }
 
   //各表示(画面上の数値)を更新するためのやつ
-  update(population, phaseIndex, phase, elapsedSeconds, bestTime) {
+  update(population, phaseIndex, phase, elapsedSeconds, bestTime, playMode) {
     const phaseNumber = Math.min(phaseIndex + 1, Phases.length);
     const phaseCount = Phases.length;
 
@@ -49,22 +60,30 @@ class HudView {
     this.phaseText.setText(`PHASE ${phaseNumber}/${phaseCount}  SPEED ${phase.speed}`);
     this.timeText.setText(`TIME ${elapsedSeconds.toFixed(2)}s`);
 
+    this.outsidePopulation.textContent = `${population}`;
+    this.outsidePhase.textContent = `${phaseNumber} / ${phaseCount}`;
+    this.outsideTime.textContent = `${elapsedSeconds.toFixed(2)}s`;
+    this.outsideMode.textContent = Get_Play_Mode_Label(playMode);
+    this.outsideMode.classList.toggle("time-attack", playMode === Play_Mode.Time_Attack);
+
     //
     if (bestTime > 0) {
       this.bestText.setText(`BEST ${bestTime.toFixed(2)}s`);
+      this.outsideBest.textContent = `${bestTime.toFixed(2)}s`;
     } else {
       this.bestText.setText("BEST --");
+      this.outsideBest.textContent = "--";
     }
   }
 
-  showStartScreen() {
+  showStartScreen(isTimeAttackUnlocked) {
     // タイトル画面
     this.clearOverlay();
 
     this.overlayGroup = this.scene.add.group();
     this.overlayGroup.add(this.scene.add.rectangle(Game_Width / 2, Game_Height / 2, Game_Width, Game_Height, 0x111820, 0.82));
 
-    const title = Add_Text(this.scene, Game_Width / 2, 245, "RUN!", {
+    const title = Add_Text(this.scene, Game_Width / 2, 226, "RUN!", {
       fontFamily: "sans-serif",
       fontSize: `${42}px`,
       color: "#ffffff",
@@ -74,7 +93,7 @@ class HudView {
     });
     title.setOrigin(0.5);
 
-    const start = Add_Text(this.scene, Game_Width / 2, 318, "SPACE START", {
+    const start = Add_Text(this.scene, Game_Width / 2, 294, "SPACE NORMAL", {
       fontFamily: "sans-serif",
       fontSize: `${24}px`,
       color: "#3ddc97",
@@ -87,10 +106,24 @@ class HudView {
 
 
     this.overlayGroup.addMultiple([title, start]);
+
+    if (isTimeAttackUnlocked) {
+      const timeAttackStart = Add_Text(this.scene, Game_Width / 2, 350, "T  TIME ATTACK", {
+        fontFamily: "sans-serif",
+        fontSize: `${24}px`,
+        color: "#ffd166",
+        fontStyle: "bold",
+        stroke: "#0b1017",
+        strokeThickness: 4,
+      });
+      timeAttackStart.setOrigin(0.5);
+      this.overlayGroup.add(timeAttackStart);
+    }
+
     this.overlayGroup.setDepth(200);
   }
 
-  showEndScreen(didClear, reason, elapsedSeconds, population) {
+  showEndScreen(didClear, reason, elapsedSeconds, population, playMode, isTimeAttackUnlocked, didUnlockTimeAttack) {
     // クリア・ゲームオーバー画面
     this.clearOverlay();
 
@@ -113,7 +146,7 @@ class HudView {
     const detail = Add_Text(this.scene, 
       Game_Width / 2,
       322,
-      `${reason}\nTIME ${elapsedSeconds.toFixed(2)}s\n人数 ${population}`,
+      `${Get_Play_Mode_Label(playMode)}\n${reason}\nTIME ${elapsedSeconds.toFixed(2)}s\n人数 ${population}`,
       {
         fontFamily: "sans-serif",
         fontSize: `${22}px`,
@@ -127,9 +160,10 @@ class HudView {
     );
     detail.setOrigin(0.5);
 
-    const restart = Add_Text(this.scene, Game_Width / 2, 430, "SPACE RETRY", {
+    const restartLabel = isTimeAttackUnlocked ? "SPACE RETRY    T TIME ATTACK" : "SPACE RETRY";
+    const restart = Add_Text(this.scene, Game_Width / 2, didUnlockTimeAttack ? 482 : 450, restartLabel, {
       fontFamily: "sans-serif",
-      fontSize: `${24}px`,
+      fontSize: `${20}px`,
       color: "#ffd166",
       fontStyle: "bold",
       stroke: "#0b1017",
@@ -138,6 +172,20 @@ class HudView {
     restart.setOrigin(0.5);
 
     this.overlayGroup.addMultiple([title, detail, restart]);
+
+    if (didUnlockTimeAttack) {
+      const unlock = Add_Text(this.scene, Game_Width / 2, 432, "TIME ATTACK UNLOCKED", {
+        fontFamily: "sans-serif",
+        fontSize: `${20}px`,
+        color: "#3ddc97",
+        fontStyle: "bold",
+        stroke: "#0b1017",
+        strokeThickness: 4,
+      });
+      unlock.setOrigin(0.5);
+      this.overlayGroup.add(unlock);
+    }
+
     this.overlayGroup.setDepth(200);
   }
 
