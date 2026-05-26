@@ -12,10 +12,11 @@ class FallingObjectFactory {
     const container = this.scene.add.container(0, -90);
     container.setDepth(20);
 
-    const leftGate = this.createGateVisual(Left_Lane_X, gatePair[0], 0x3ddc97);
-    const rightGate = this.createGateVisual(Right_Lane_X, gatePair[1], 0xffd166);
+    const leftGate = this.createGateVisual(Left_Lane_X, gatePair[0], 0x4fe3a1);
+    const rightGate = this.createGateVisual(Right_Lane_X, gatePair[1], 0xf4d06f);
 
-    container.add([leftGate.box, leftGate.text, rightGate.box, rightGate.text]);
+    container.add(leftGate.parts);
+    container.add(rightGate.parts);
     this.addVisualNoise(container, phase, gatePairIndex);
 
     return {
@@ -26,26 +27,34 @@ class FallingObjectFactory {
       gates: gatePair,
       leftBox: leftGate.box,
       rightBox: rightGate.box,
+      leftGlow: leftGate.glow,
+      rightGlow: rightGate.glow,
     };
   }
   //指定した位置に指定した色のゲートを一つ作り出すやつ
   createGateVisual(x, gate, color) {
-    const box = this.scene.add.rectangle(x, 0, 145, 86, color, 0.9);
-    box.setStrokeStyle(4, 0xffffff, 0.75);
+    const shadow = this.scene.add.rectangle(x + 6, 8, 148, 88, 0x000000, 0.24);
+    const glow = this.scene.add.rectangle(x, 0, 156, 96, color, 0.16);
+    const box = this.scene.add.rectangle(x, 0, 145, 86, color, 0.96);
+    const shine = this.scene.add.rectangle(x, -30, 132, 12, 0xffffff, 0.23);
+    box.setStrokeStyle(3, 0xffffff, 0.88);
 
-    const text = this.scene.add.text(x, 0, gate.label, {
+    const text = Add_Text(this.scene, x, 0, gate.label, {
       fontFamily: "sans-serif",
-      fontSize: "34px",
+      fontSize: `${34}px`,
       color: "#111820",
       fontStyle: "bold",
+      stroke: "#ffffff",
+      strokeThickness: 2,
     });
     text.setOrigin(0.5);
 
-    return { box, text };
+    return { box, glow, parts: [shadow, glow, box, shine, text] };
   }
 
-  //視認性を悪くするための
+  //視認性を悪くするためのやつ
   addVisualNoise(container, phase, gatePairIndex) {
+    //noisecountが0なら処理せずそのまま終了させる
     if (phase.noiseCount === 0) {
       return;
     }
@@ -56,9 +65,9 @@ class FallingObjectFactory {
       const x = 95 + i * 95;
       const y = -55 + i * 24;
       const label = fakeLabels[(gatePairIndex + i) % fakeLabels.length];
-      const fakeText = this.scene.add.text(x, y, label, {
+      const fakeText = Add_Text(this.scene, x, y, label, {
         fontFamily: "sans-serif",
-        fontSize: "18px",
+        fontSize: `${18}px`,
         color: "#d6dee8",
         fontStyle: "bold",
       });
@@ -67,24 +76,29 @@ class FallingObjectFactory {
       container.add(fakeText);
     }
   }
-
+  
+  //フェーズごとの最後の数字を生成
+  //
   createWall(cost) {
-    // フェーズ最後の壁を作る処理
     const container = this.scene.add.container(0, -90);
     container.setDepth(20);
 
-    const wall = this.scene.add.rectangle(Game_Width / 2, 0, 335, 76, 0xef476f, 0.94);
-    wall.setStrokeStyle(4, 0xffffff, 0.75);
+    const shadow = this.scene.add.rectangle(Game_Width / 2 + 7, 8, 338, 78, 0x000000, 0.24);
+    const wall = this.scene.add.rectangle(Game_Width / 2, 0, 335, 76, 0xe84f74, 0.98);
+    const shine = this.scene.add.rectangle(Game_Width / 2, -25, 312, 10, 0xffffff, 0.2);
+    wall.setStrokeStyle(3, 0xffffff, 0.85);
 
-    const text = this.scene.add.text(Game_Width / 2, 0, `WALL -${cost}`, {
+    const text = Add_Text(this.scene, Game_Width / 2, 0, `WALL -${cost}`, {
       fontFamily: "sans-serif",
-      fontSize: "30px",
+      fontSize: `${30}px`,
       color: "#ffffff",
       fontStyle: "bold",
+      stroke: "#6d1830",
+      strokeThickness: 3,
     });
     text.setOrigin(0.5);
 
-    container.add([wall, text]);
+    container.add([shadow, wall, shine, text]);
 
     return {
       type: "wall",
@@ -96,22 +110,27 @@ class FallingObjectFactory {
   }
 
   createGoal() {
-    // ゴールを作る処理
+    // ゴールを作る
     const container = this.scene.add.container(0, -90);
     container.setDepth(20);
 
-    const line = this.scene.add.rectangle(Game_Width / 2, 0, 360, 90, 0xffffff, 0.95);
+    const shadow = this.scene.add.rectangle(Game_Width / 2 + 7, 8, 362, 92, 0x000000, 0.22);
+    const line = this.scene.add.rectangle(Game_Width / 2, 0, 360, 90, 0xffffff, 0.98);
+    const shine = this.scene.add.rectangle(Game_Width / 2, -29, 330, 12, 0xfff1b2, 0.45);
     line.setStrokeStyle(5, 0xffd166, 1);
 
-    const text = this.scene.add.text(Game_Width / 2, 0, "GOAL", {
+    const text = Add_Text(this.scene, Game_Width / 2, 0, "GOAL", {
       fontFamily: "sans-serif",
-      fontSize: "38px",
+      fontSize: `${38}px`,
       color: "#111820",
       fontStyle: "bold",
+      stroke: "#ffd166",
+      strokeThickness: 2,
     });
     text.setOrigin(0.5);
 
-    container.add([line, text]);
+    //
+    container.add([shadow, line, shine, text]);
 
     return {
       type: "goal",
@@ -125,8 +144,10 @@ class FallingObjectFactory {
     // 選んだゲートを強調する処理
     const selectedBox = selectedLane === Lane.Left ? fallingObject.leftBox : fallingObject.rightBox;
     const otherBox = selectedLane === Lane.Left ? fallingObject.rightBox : fallingObject.leftBox;
+    const selectedGlow = selectedLane === Lane.Left ? fallingObject.leftGlow : fallingObject.rightGlow;
 
-    selectedBox.setStrokeStyle(7, 0xffffff, 1);
+    selectedBox.setStrokeStyle(6, 0xffffff, 1);
+    selectedGlow.setAlpha(0.42);
     otherBox.setAlpha(0.35);
   }
 }

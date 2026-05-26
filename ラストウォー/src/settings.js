@@ -1,8 +1,27 @@
 "use strict";
 
-// 画面サイズ
+//ゲーム内で使う画面サイズ
+//座標はこの 480 x 720 の中で考える
 const Game_Width = 480;
 const Game_Height = 720;
+
+//canvasだけを高解像度で描くための倍率
+//ゲーム内の座標やスピードは変えず、見た目の細かさだけ上げる
+const Canvas_Pixel_Ratio = 3;
+const Canvas_Width = Game_Width * Canvas_Pixel_Ratio;
+const Canvas_Height = Game_Height * Canvas_Pixel_Ratio;
+
+//文字を高解像度で作るための共通関数
+function Add_Text(scene, x, y, text, style) {
+  const textObject = scene.add.text(x, y, text, style);
+
+  //Phaserのバージョンによっては setResolution がないので、ある時だけ使う
+  if (typeof textObject.setResolution === "function") {
+    textObject.setResolution(Canvas_Pixel_Ratio);
+  }
+
+  return textObject;
+}
 
 //プレイヤーの高さ
 const Player_Y = 590;
@@ -14,6 +33,10 @@ const Right_Lane_X = 335;
 const Start_Population = 5;
 // ベストタイムをブラウザに保存するときの名前
 const Best_Time_Key = "simpleGateRunnerBestTime";
+//共通ゲームシステムで使う、このゲームのID
+const Game_System_Id = "lastwar";
+//最初の人数を1人増やすアイテムのID
+const Start_Plus_Item_Id = "l_plus";
 
 // 入力・移動で使うレーン名
 const Lane = {
@@ -23,8 +46,8 @@ const Lane = {
 
 
 //各フェーズの内容を管理
-//ゲートそれぞれの設定をここで変更できる
-//決まった問題しか出せないから問題の自動生成も行えるようにしたい
+//速度や霧など、計算問題以外の難易度はここで固定する
+//実際に出るゲートの数字は GateGenerator.js で毎プレイ作る
 const Phases = [
   {
     //呼び出す時の名前
@@ -37,10 +60,10 @@ const Phases = [
     noiseCount: 0,
     //フェーズを超える時に減らされる人数
     wallCost: 12,
-    gates: [
-      [{ label: "+5", type: "add", value: 5 }, { label: "-2", type: "add", value: -2 }],
-      [{ label: "x2", type: "multiply", value: 2 }, { label: "+4", type: "add", value: 4 }],
-    ],
+    //このフェーズ内で何組のゲートを出すか
+    gateCount: 5,
+    //ランダム生成する計算問題の難しさ
+    randomLevel: 1,
   },
   {
     name: "PHASE 2",
@@ -48,10 +71,8 @@ const Phases = [
     fogAlpha: 0.04,
     noiseCount: 0,
     wallCost: 16,
-    gates: [
-      [{ label: "x3", type: "multiply", value: 3 }, { label: "+8", type: "add", value: 8 }],
-      [{ label: "-5", type: "add", value: -5 }, { label: "÷2", type: "divide", value: 2 }],
-    ],
+    gateCount: 5,
+    randomLevel: 2,
   },
   {
     name: "PHASE 3",
@@ -59,10 +80,8 @@ const Phases = [
     fogAlpha: 0.08,
     noiseCount: 1,
     wallCost: 25,
-    gates: [
-      [{ label: "+14", type: "add", value: 14 }, { label: "x4", type: "multiply", value: 4 }],
-      [{ label: "x2", type: "multiply", value: 2 }, { label: "+11", type: "add", value: 11 }],
-    ],
+    gateCount: 5,
+    randomLevel: 3,
   },
   {
     name: "PHASE 4",
@@ -70,10 +89,8 @@ const Phases = [
     fogAlpha: 0.13,
     noiseCount: 2,
     wallCost: 22,
-    gates: [
-      [{ label: "x5", type: "multiply", value: 5 }, { label: "+32", type: "add", value: 32 }],
-      [{ label: "÷3", type: "divide", value: 3 }, { label: "-18", type: "add", value: -18 }],
-    ],
+    gateCount: 5,
+    randomLevel: 4,
   },
   {
     name: "PHASE 5",
@@ -81,15 +98,12 @@ const Phases = [
     fogAlpha: 0.18,
     noiseCount: 3,
     wallCost: 40,
-    gates: [
-      [{ label: "x7", type: "multiply", value: 7 }, { label: "+28", type: "add", value: 28 }],
-      [{ label: "x2", type: "multiply", value: 2 }, { label: "+41", type: "add", value: 41 }],
-      [{ label: "÷2", type: "divide", value: 2 }, { label: "-33", type: "add", value: -33 }],
-    ],
+    gateCount: 5,
+    randomLevel: 5,
   },
 ];
 
-// ゲートに入ったときの人数計算
+//ゲートに入ったときの人数計算
 //もし人がゲートを通ったらの処理
 function Calculate_Population(currentPopulation, gate) {
   //ゲートの種類によって計算を変える
@@ -107,6 +121,8 @@ function Calculate_Population(currentPopulation, gate) {
 
 //今のフェーズ設定を取り出す処理
 //配列から取り出す処理をわざわざ関数を使ってやる必要があるのかはわからない
-function Get_Phase_By_Index(phaseIndex) {
-  return Phases[phaseIndex];
+function Get_Phase_By_Index(phaseIndex, phaseList) {
+  const targetPhases = phaseList || Phases;
+  const safePhaseIndex = Math.min(phaseIndex, targetPhases.length - 1);
+  return targetPhases[safePhaseIndex];
 }
