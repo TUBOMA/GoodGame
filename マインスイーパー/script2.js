@@ -92,7 +92,7 @@ setInterval(() => {
 }, 1000);
 
 // ===== ショップ =====
-document.getElementById("atkUp").onclick = () => {
+/*document.getElementById("atkUp").onclick = () => {
   if (coin >= 10) {
     coin -= 10;
     attack++;
@@ -106,4 +106,4 @@ document.getElementById("autoUp").onclick = () => {
     auto++;
     updateUI();
   }
-};
+};*/
