@@ -29,6 +29,9 @@ function defeatEnemy() {
   maxHp = Math.floor(maxHp * 1.2 + 10);
 
   hp = maxHp;
+  if (typeof GameSystem !== 'undefined') {
+    GameSystem.addCoins(100); // 数字は一旦100統一で 調整は後々
+  }
   updateUI();
 }
 

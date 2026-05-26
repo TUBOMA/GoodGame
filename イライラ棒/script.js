@@ -184,12 +184,19 @@ function makePath(columns, rows) {
   return makeActualPath(bestPath || makeFallbackCoarsePath(coarseColumns, coarseRows), columns, rows);
 }
 
-// STARTやGOALを、対応するマスの中に配置します。
+// STARTやGOALを、対応するマスの中に配置
 function placeZone(zone, column, row, cellWidth, cellHeight, areaHeight) {
+<<<<<<< Updated upstream
   const padding = 6;
   const width = Math.max(34, cellWidth - padding * 2);
   const height = Math.max(34, cellHeight - padding * 2);
   const left = column * cellWidth + padding;
+=======
+  const padding = 8;
+  const width = Math.max(40, cellWidth - padding * 2);
+  const height = Math.max(40, cellHeight - padding * 2);
+  const left = column * cellWidth + (cellWidth - width) / 2;
+>>>>>>> Stashed changes
   const top = Math.min(
     areaHeight - height - padding,
     Math.max(padding, row * cellHeight + (cellHeight - height) / 2)
@@ -419,7 +426,7 @@ function hitObstacle(cursorRect) {
 
 // ミスした時の処理です。STARTに戻して画面を少し揺らします。
 function failRound() {
-  resetRound();
+  // タイマーは保持するため、resetRound() は呼び出さない
   resetPlayerToStart();
   gameArea.classList.add("is-danger");
 
@@ -484,6 +491,16 @@ function updateGame(currentTime) {
   if (!isGameClear && hasMovementInput()) {
     if (!isPlaying) {
       isPlaying = true;
+<<<<<<< Updated upstream
+=======
+      
+      // 初めて動き出した時のみタイマーをセット
+      if (!isTimerRunning) {
+          isTimerRunning = true;
+          startTime = currentTime; 
+      }
+
+>>>>>>> Stashed changes
       gameArea.classList.add("is-playing");
     }
 

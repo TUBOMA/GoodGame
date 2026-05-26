@@ -124,28 +124,35 @@ const GameSystem = {
       },
 
       // 実績を解除する関数（各ゲームから呼び出される）
-      unlockAchievement: function(achId, achName) {
-        const data = this._loadAll();
-        
-        // 過去のセーブデータ対策（箱がなければ作る）
-        if (!data.common.unlockedAchievements) {
-          data.common.unlockedAchievements = [];
-        }
+    // 引数は achId だけに変更
+          unlockAchievement: function(achId) {
+            const data = this._loadAll();
+            
+            if (!data.common.unlockedAchievements) {
+              data.common.unlockedAchievements = [];
+            }
 
-        // すでに解除済みなら何もしない
-        if (data.common.unlockedAchievements.includes(achId)) {
-          return false;
-        }
+            if (data.common.unlockedAchievements.includes(achId)) {
+              return false; // すでに解除済み
+            }
 
-        // 解除リストに追加してセーブ
-        data.common.unlockedAchievements.push(achId);
-        this._saveAll(data);
+            data.common.unlockedAchievements.push(achId);
+            this._saveAll(data);
 
-        // 画面の右下にカッコいい通知を出す
-        this.showToast(`🏆 実績解除: ${achName}`);
-        console.log(`[実績] 「${achName}」を解除しました！`);
-        return true;
-      },
+            // ★マスターデータから名前を自動検索する処理
+            let achName = "謎の実績";
+            // もし master_data.js が読み込まれていれば検索する
+            if (typeof GameMasterData !== 'undefined' && GameMasterData.achievements) {
+              const foundAch = GameMasterData.achievements.find(ach => ach.id === achId);
+              if (foundAch) {
+                achName = foundAch.name;
+              }
+            }
+
+            this.showToast(`🏆 実績解除: ${achName}`);
+            console.log(`[実績] 「${achName}」を解除しました！`);
+            return true;
+          },
 
       // 画面に一時的な通知（トースト）を出す機能
       showToast: function(message) {
