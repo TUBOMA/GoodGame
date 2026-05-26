@@ -139,7 +139,7 @@ button:hover,
   background-size: 40px 40px;
 }
 
-/* STARTとGOALの共通デザインです。 */
+/* STARTとGOALの共通デザインです*/
 .zone {
   position: absolute;
   z-index: 3;
@@ -149,6 +149,9 @@ button:hover,
   border-radius: 8px;
   font-weight: 900;
   letter-spacing: 0;
+
+
+  font-size: 0.8rem;
 }
 
 .start-zone {
