@@ -85,26 +85,19 @@ const GameSystem = {
     this.updateUIDisplay();
     return 'SUCCESS';
   },
-    
-    // GameSystem の中（hasItem や tryPurchaseItem の下あたり）に追加します
 
-      // ★新規：アイテムを1つ消費する（成功すれば true、持っていなければ false を返す）
-      useItem: function(itemId) {
-        const data = this._loadAll();
-        
-        // アイテムを持っていない、または0個以下の場合は失敗
-        if (!data.common.ownedItems[itemId] || data.common.ownedItems[itemId] <= 0) {
-          return false;
-        }
+    useItem: function(itemId, num = 1) { // ← ここがポイント！
+      const data = this._loadAll();
+                  if (!data.common.ownedItems[itemId] || data.common.ownedItems[itemId] < num) {
+        return false;
+      }
 
-        // 所持数を1減らす
-        data.common.ownedItems[itemId] -= 1;
-        this._saveAll(data);
-        
-        // ※もし消費アイテムを使った時に画面上のUI（所持数など）を更新したい場合は、
-        // ここに更新用の処理やイベントを飛ばすこともできます。
-        return true; // 消費成功！
-},
+      // 所持数を要求数(num)だけ減らす
+      data.common.ownedItems[itemId] -= num;
+      this._saveAll(data);
+            
+      return true; // 消費成功！
+    },
 
   loadGameData: function(gameId) {
     const data = this._loadAll();
