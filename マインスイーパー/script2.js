@@ -32,7 +32,6 @@ function defeatEnemy() {
     GameSystem.addCoins(100); // 数字は一旦100統一で 調整は後々
   }*/
 
-  gainCoins(100);
   // 撃破時に一瞬小さくする演出
   enemyEl.style.transform = "scale(0)";
   setTimeout(() => {
@@ -43,6 +42,7 @@ function defeatEnemy() {
   maxHp = Math.floor(maxHp * 1.2 + 10);
   hp = maxHp;
   updateUI();
+  gainCoins(100);
 }
 
 // ===== 攻撃処理（共通） =====
