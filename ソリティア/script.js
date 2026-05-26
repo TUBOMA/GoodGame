@@ -12,7 +12,7 @@ let turns = 0;
 let miss = 0;
 let scores = 0;
 let combos = 0;
-//let misslimit = 6;
+let misslimit = 6;
 let BASE_MISS_LIMIT = 6;
 let firstCard = null;
 let secondCard = null;
@@ -164,6 +164,7 @@ function unflipCards() {
         missDisplay.textContent = `ミス: ${miss}`;
 
         if (miss >= misslimit) {
+            messageDisplay.textContent = 'ゲームオーバー！';
             gameOver();
         }
     }, 500);
@@ -195,6 +196,7 @@ function gameEnd() {
     startButton.disabled = false;
     resetButton.disabled = true;
     startButton.textContent = 'もう一度プレイ';
+
     const currentHighScore = loadHighScore();
     if (scores > currentHighScore) {
         saveHighScore(scores);
@@ -228,7 +230,6 @@ function startGame() {
         // 未購入なら 0 が返ってくるので、何も起きず安全です
         misslimit = BASE_MISS_LIMIT + GameSystem.getItemCount('s_miss_plus');
     }
-
     scoreDisplay.textContent = `スコア: ${scores}`;
     missDisplay.textContent = `ミス: ${miss}`;
     startButton.disabled = true;

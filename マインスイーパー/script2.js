@@ -26,11 +26,17 @@ function updateUI() {
 
 updateUI();
 
+
 // ===== 敵撃破 =====
 function defeatEnemy() {
-  /*if (typeof GameSystem !== 'undefined') {
-    GameSystem.addCoins(100); // 数字は一旦100統一で 調整は後々
-  }*/
+
+  // GameSystemのコイン追加
+  if (typeof GameSystem !== 'undefined') {
+    GameSystem.addCoins(100); // 数字は一旦100統一
+  }
+
+  // ローカル用コイン
+  gainCoins(100);
 
   // 撃破時に一瞬小さくする演出
   enemyEl.style.transform = "scale(0)";
@@ -41,8 +47,14 @@ function defeatEnemy() {
   // インフレ
   maxHp = Math.floor(maxHp * 1.2 + 10);
   hp = maxHp;
+
   updateUI();
-  gainCoins(100);
+}
+
+// ===== コイン加算 =====
+function gainCoins(amount) {
+  coin += amount;
+  updateUI();
 }
 
 // ===== 攻撃処理（共通） =====
@@ -80,7 +92,7 @@ setInterval(() => {
 }, 1000);
 
 // ===== ショップ =====
-document.getElementById("atkUp").onclick = () => {
+/*document.getElementById("atkUp").onclick = () => {
   if (coin >= 10) {
     coin -= 10;
     attack++;
@@ -94,4 +106,4 @@ document.getElementById("autoUp").onclick = () => {
     auto++;
     updateUI();
   }
-};
+};*/
