@@ -4,10 +4,16 @@ const startZone = document.getElementById("startZone");
 const goalZone = document.getElementById("goalZone");
 const cursor = document.getElementById("cursor");
 const scoreText = document.getElementById("score");
+const timeText = document.getElementById("time");
+const bestTimeText = document.getElementById("bestTime");
 const restartButton = document.getElementById("restartButton");
 
 // ゲーム全体の状態を保存する変数です。
 let score = 0;
+let startTime = 0;
+let currentElapsedTime = 0;
+let bestRecord = null;
+let isTimerRunning = false;
 let isPlaying = false;
 let isGameClear = false;
 let resizeTimer = 0;
@@ -401,6 +407,11 @@ function updateScore(nextScore) {
 function resetRound() {
   isPlaying = false;
   isGameClear = false;
+  
+  isTimerRunning = false;
+  currentElapsedTime = 0;
+  timeText.textContent = "0.00";
+
   pressedKeys.clear();
   gameArea.classList.remove("is-playing", "is-danger");
   cursor.style.display = "block";
@@ -489,9 +500,22 @@ function failRound() {
 function clearRound() {
   isGameClear = true;
   isPlaying = false;
+  
+  isTimerRunning = false; // タイマーストップ
+  if (bestRecord === null || currentElapsedTime < bestRecord) {
+    bestRecord = currentElapsedTime;
+    bestTimeText.textContent = bestRecord.toFixed(2);
+  }
+
+  // タイムに応じたスコア計算（10秒まで1000、それ以降は1秒につき10点マイナス）
+  let addedScore = 1000;
+  if (currentElapsedTime > 10) {
+    addedScore = Math.max(0, Math.round(1000 - (currentElapsedTime - 10) * 10));
+  }
+
   pressedKeys.clear();
-  updateScore(score + 100);
-  gainCoins(100);
+  updateScore(score + addedScore);
+  gainCoins(addedScore);
 
   gameArea.classList.remove("is-playing");
 
@@ -529,7 +553,6 @@ function updateGame(currentTime) {
   if (!isGameClear && hasMovementInput()) {
     if (!isPlaying) {
       isPlaying = true;
-
       
       // 初めて動き出した時のみタイマーをセット
       if (!isTimerRunning) {
@@ -545,6 +568,12 @@ function updateGame(currentTime) {
       playerX + (moveX / length) * playerSpeed * deltaTime,
       playerY + (moveY / length) * playerSpeed * deltaTime
     );
+  }
+
+  // タイマーの更新と表示
+  if (isTimerRunning) {
+    currentElapsedTime = (currentTime - startTime) / 1000;
+    timeText.textContent = currentElapsedTime.toFixed(2);
   }
 
   if (isPlaying && playerRect && hitObstacle(playerRect)) {
