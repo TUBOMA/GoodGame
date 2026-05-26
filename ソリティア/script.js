@@ -5,7 +5,7 @@ const scoreDisplay = document.getElementById('scoreDisplay');
 const missDisplay = document.getElementById('missDisplay');
 const highScoreDisplay = document.getElementById('highScoreDisplay');
 const messageDisplay = document.getElementById('message');
-const GAME_ID = 'sinnkeisuijaku';
+const GAME_ID = 'sinnkeisuijyaku';
 
 let cardsFlipped = 0;
 let turns = 0;
