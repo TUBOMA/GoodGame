@@ -2,85 +2,50 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>GOOD GAME - ホーム</title>
-  <link rel="stylesheet" href="./common/main.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>クリッカーゲーム</title>
+  <link rel="stylesheet" href="style2.css">
 </head>
 <body>
 
-    <!-- 上部のナビゲーションバー -->
-      <header class="navbar">
-        <div class="logo">GOOD GAME</div>
-        <div class="nav-right">
-          <div class="coin-display">所持コイン: <span id="ui-coin">0</span> C</div>
-          
-          <!-- ★追加：実績ボタン -->
-          <a href="./common/achievements/index.html" class="btn shop-btn" style="background-color: #3498db; margin-right: 10px;">🏆 実績</a>
-          
-          <a href="./common/shop/index.html" class="btn shop-btn">🛒 ショップ</a>
-        </div>
-      </header>
-
-  <main class="container">
-    <h1 class="page-title">ゲームを選ぶ</h1>
-    <!--
-    <div id="secret-message" style="display: none; background: #ffeaa7; padding: 15px; text-align: center; border-radius: 8px; margin-bottom: 20px; font-weight: bold; color: #d35400;">
-      🎉 テスト用メッセージの購入ありがとうございます！この文字は購入者限定です！
-    </div>
-    -->
-    
-    <div class="game-grid">
-      <a href="./イライラ棒/index.html" class="game-card">
-        <h2>イライラ棒</h2>
-        <p>マウスの集中力が試される！</p>
-      </a>
-      
-      <a href="./マインスイーパー/index.html" class="game-card">
-        <h2>クリッカーゲーム</h2>
-        <p>一人遊びの王道</p>
-
-      </a>
-      
-      <a href="./ラストウォー/index.html" class="game-card">
-        <h2>ラストウォー</h2>
-        <p>生き残りをかけた戦い</p>
-      </a>
-      
-      <a href="./ソリティア/index.html" class="game-card">
-        <h2>神経衰弱</h2>
-        <p>定番の思考型パズル</p>
-      </a>
-      
-      <!--
-      <a href="./test/index.html" class="game-card">
-        <h2>動作テスト用</h2>
-        <p>コインの追加テスト</p>
-      </a>
-      -->
-    
-    </div>
-
-    <div style="text-align: center; margin-top: 60px;">
-      <button id="btn-trigger-reset" class="btn back-btn" style="background-color: #7f8c8d;">データを初期化する</button>
-    </div>
-
-  </main>
-
-  <div id="reset-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-      <h2 id="modal-title">⚠️ 警告</h2>
-      <p id="modal-text">すべてのデータ（所持コイン、購入したアイテム）を消去します。本当によろしいですか？</p>
-      <div class="modal-buttons">
-        <button id="btn-cancel-reset" class="btn back-btn">やめる</button>
-        <button id="btn-next-reset" class="btn danger-btn">はい、消去します</button>
-      </div>
-    </div>
+<!-- ===== メイン ===== -->
+<div id="mainGame">
+  <!-- ホームに戻るボタン -->
+  <div style="text-align: left; margin: 10px;">
+    <a href="../index.html"><button class="btn-sub">◀ ホームに戻る</button></a>
   </div>
 
-  <script src="./common/main.js"></script>
+  <h1>クリッカーゲーム</h1>
+
+  <!-- 敵のイラスト（画像）エリア -->
+  <div id="enemyContainer">
+    <!-- ⚠️ src="slime.png" を、用意した画像ファイル名や画像URLに書き換えてください -->
+    <img id="enemy" src="slime.png" alt="敵のイラスト">
+  </div>
+
+  <!-- HPバー -->
+  <div class="hp-container">
+    <p>敵HP: <span id="hp"></span></p>
+    <progress id="hpBar" value="100" max="100"></progress>
+  </div>
   
-  <script src="./common/reset.js"></script>
-  
-  <script src="./common/home.js"></script>
+  <button id="attackBtn" class="btn-main">💥 攻撃</button>
+
+  <!-- ステータス表示 -->
+  <div class="status-container">
+    <p>⚔️ 攻撃力: <span id="attack">1</span></p>
+    <p>🤖 自動攻撃: <span id="auto">0</span>/秒</p>
+    <p>💰 コイン: <span id="coin">0</span></p>
+  </div>
+
+</div>
+
+<!-- 共通 -->
+<script src="../common/master_data.js"></script>
+<script src="../common/main.js"></script>
+
+<!-- このゲーム用 -->
+<script src="./script2.js"></script>
 
 </body>
 </html>
