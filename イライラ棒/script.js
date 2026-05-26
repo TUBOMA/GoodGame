@@ -339,6 +339,7 @@ function addHazards(pathCells, cellWidth, cellHeight) {
     .map((cell, index) => ({ ...cell, index }))
     .slice(4, -4);
 
+ marge_test
   const selectedHazards = [];
   const shuffledCandidates = shuffle(candidateCells);
 
@@ -366,11 +367,13 @@ function addHazards(pathCells, cellWidth, cellHeight) {
     if (selectedHazards.length >= hazardCount) break;
 
     if (!selectedHazards.some((selected) => selected.index === cell.index)) {
+         marge_test
       selectedHazards.push(cell);
     }
   }
 
   // 決定した位置にカッターを生成・配置
+     marge_test
   selectedHazards.forEach((cell, index) => {
     const size = Math.max(22, Math.min(32, Math.min(cellWidth, cellHeight) * 0.37));
     const hazard = document.createElement("div");

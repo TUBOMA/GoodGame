@@ -1,59 +1,94 @@
+/* =========================================
+   テスト画面の基本設定
+   ========================================= */
 body {
   margin: 0;
   padding: 20px;
-  font-family: sans-serif;
-  background-color: #e8f4f8; /* テストと分かりやすいように少し青い背景 */
-  color: #333;
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  color: #f7fbff;
+  /* メイン画面と同じサイバー調のグラデーション背景 */
+  background:
+    radial-gradient(circle at 20% 18%, rgba(55, 210, 190, 0.22), transparent 24rem),
+    linear-gradient(135deg, #111827 0%, #1e293b 46%, #14213d 100%);
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
+/* 戻るボタン（メインのCSSと統一） */
 .back-btn {
   display: inline-block;
-  padding: 10px 15px;
-  background-color: #95a5a6;
-  color: white;
+  padding: 10px 18px;
+  background: #334155;
+  color: #f8fafc;
   text-decoration: none;
-  border-radius: 5px;
-  font-weight: bold;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-weight: 700;
+  transition: transform 0.16s ease, background 0.16s ease;
 }
 
 .back-btn:hover {
-  background-color: #7f8c8d;
+  background: #475569;
+  transform: translateY(-2px);
 }
 
+/* メインコンテンツの囲い（グラスモーフィズム調） */
 .container {
   max-width: 500px;
   margin: 40px auto;
-  background: white;
+  background: rgba(15, 23, 42, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
   text-align: center;
+}
+
+/* テスト画面の見出しカラー */
+.container h1 {
+  color: #a7f3d0;
+  margin-top: 0;
 }
 
 .button-area {
   margin-top: 30px;
   display: flex;
   justify-content: center;
+  flex-wrap: wrap; /* 画面が狭い時にボタンが折り返すように追加 */
   gap: 15px;
 }
 
+/* =========================================
+   アクションボタンのデザイン
+   ========================================= */
 .action-btn {
   padding: 12px 24px;
   font-size: 16px;
-  font-weight: bold;
-  border: none;
+  font-weight: 700;
+  border: 0;
   border-radius: 8px;
   cursor: pointer;
-  background-color: #f1c40f;
-  color: #333;
-  transition: transform 0.1s;
+  background: #facc15;
+  color: #0f172a;
+  transition: transform 0.1s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.action-btn:hover {
+  background: #fde047;
+  transform: translateY(-2px);
 }
 
 .action-btn:active {
   transform: scale(0.95); /* 押した時に少し凹むアニメーション */
 }
 
+/* 特別なボタン（赤色のアクセント） */
 .special-btn {
-  background-color: #e74c3c;
-  color: white;
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.special-btn:hover {
+  background: #f87171;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.4); /* ホバー時に赤く発光する */
 }
