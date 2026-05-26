@@ -91,11 +91,7 @@ class RunnerScene extends Phaser.Scene {
     this.playerView.updatePopulation(this.population);
     this.roadView.updateLaneHighlight(this.playerView.getCurrentLane());
 
-    //通常モードではフェーズ開始を表示する
-    //タイムアタックではゲートをすぐ読みたいので、中央表示を出さない
-    if (!this.isTimeAttackMode()) {
-      this.hudView.showCenterMessage("PHASE 1");
-    }
+    //フェーズ番号は上部HUDに表示する。道の上には文字を出さず、ゲートを読みやすくする
     this.spawnNextObject();
     this.updateHud();
   }
@@ -296,16 +292,15 @@ class RunnerScene extends Phaser.Scene {
     if (this.population <= 0) {
       this.finishGame(false, "壁を突破できなかった");
       return;
+    }else{
+            GameSystem.addCoins(this.phaseIndex*10+10);
     }
 
     //フェーズを進める
     this.phaseIndex += 1;
     this.currentGatePairIndex = 0;
 
-    //フェーズ終了時に
-    if (this.phaseIndex < this.playPhases.length && !this.isTimeAttackMode()) {
-      this.hudView.showCenterMessage(this.playPhases[this.phaseIndex].name);
-    }
+    //フェーズ番号は上部HUDで更新される
   }
 
   finishGame(didClear, reason) {
