@@ -58,6 +58,16 @@ class PlayerView {
   updatePopulation(population) {
     //プレイヤー周りの人数表示
     this.populationText.setText(`${population}`);
+    const populationLength = `${population}`.length;
+
+    if (populationLength >= 8) {
+      this.populationText.setFontSize(13);
+    } else if (populationLength >= 5) {
+      this.populationText.setFontSize(16);
+    } else {
+      this.populationText.setFontSize(20);
+    }
+
     this.dots.clear();
 
     const dotCount = Math.min(population, 18);

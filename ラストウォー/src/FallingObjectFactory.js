@@ -39,9 +39,17 @@ class FallingObjectFactory {
     const shine = this.scene.add.rectangle(x, -30, 132, 12, 0xffffff, 0.23);
     box.setStrokeStyle(3, 0xffffff, 0.88);
 
+    let gateFontSize = 34;
+
+    if (gate.label.length >= 7) {
+      gateFontSize = 20;
+    } else if (gate.label.length >= 5) {
+      gateFontSize = 26;
+    }
+
     const text = Add_Text(this.scene, x, 0, gate.label, {
       fontFamily: "sans-serif",
-      fontSize: `${34}px`,
+      fontSize: `${gateFontSize}px`,
       color: "#111820",
       fontStyle: "bold",
       stroke: "#ffffff",
@@ -88,9 +96,11 @@ class FallingObjectFactory {
     const shine = this.scene.add.rectangle(Game_Width / 2, -25, 312, 10, 0xffffff, 0.2);
     wall.setStrokeStyle(3, 0xffffff, 0.85);
 
-    const text = Add_Text(this.scene, Game_Width / 2, 0, `WALL -${cost}`, {
+    const wallLabel = `WALL -${cost}`;
+    const wallFontSize = wallLabel.length >= 14 ? 20 : wallLabel.length >= 11 ? 25 : 30;
+    const text = Add_Text(this.scene, Game_Width / 2, 0, wallLabel, {
       fontFamily: "sans-serif",
-      fontSize: `${30}px`,
+      fontSize: `${wallFontSize}px`,
       color: "#ffffff",
       fontStyle: "bold",
       stroke: "#6d1830",

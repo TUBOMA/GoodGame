@@ -66,9 +66,19 @@ body {
 }
 
 .population-value {
+  display: block;
   color: var(--main-text);
   font-size: 36px;
   line-height: 1;
+  white-space: nowrap;
+}
+
+.population-value.compact {
+  font-size: 27px;
+}
+
+.population-value.very-compact {
+  font-size: 20px;
 }
 
 .progress-panel {
@@ -164,9 +174,20 @@ canvas {
   transform: translateY(-2px);
 }
 
+@media (max-width: 700px) {
+  .arcade-shell {
+    /* 左上のホームボタンは元の位置のまま残し、HUDだけ下に逃がす */
+    padding-top: 68px;
+  }
+
+  .canvas-frame {
+    width: min(368px, calc((100svh - 288px) * 2 / 3 + 8px), 100%);
+  }
+}
+
 @media (max-width: 560px) {
   .arcade-shell {
-    padding: 8px;
+    padding: 68px 8px 8px;
     gap: 8px;
   }
 
@@ -182,6 +203,14 @@ canvas {
 
   .population-value {
     font-size: 32px;
+  }
+
+  .population-value.compact {
+    font-size: 24px;
+  }
+
+  .population-value.very-compact {
+    font-size: 17px;
   }
 
   .progress-panel {

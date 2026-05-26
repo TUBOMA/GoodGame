@@ -61,6 +61,9 @@ class HudView {
     this.timeText.setText(`TIME ${elapsedSeconds.toFixed(2)}s`);
 
     this.outsidePopulation.textContent = `${population}`;
+    const populationLength = `${population}`.length;
+    this.outsidePopulation.classList.toggle("compact", populationLength >= 5);
+    this.outsidePopulation.classList.toggle("very-compact", populationLength >= 8);
     this.outsidePhase.textContent = `${phaseNumber} / ${phaseCount}`;
     this.outsideTime.textContent = `${elapsedSeconds.toFixed(2)}s`;
     this.outsideMode.textContent = Get_Play_Mode_Label(playMode);
@@ -128,12 +131,12 @@ class HudView {
     this.clearOverlay();
 
     this.overlayGroup = this.scene.add.group();
-    this.overlayGroup.add(this.scene.add.rectangle(Game_Width / 2, Game_Height / 2, Game_Width, Game_Height, 0x111820, 0.82));
+    this.overlayGroup.add(this.scene.add.rectangle(Game_Width / 2, Game_Height / 2, Game_Width, Game_Height, 0x111820, 0.94));
 
     const titleText = didClear ? "CLEAR!" : "GAME OVER";
     const titleColor = didClear ? "#3ddc97" : "#ef476f";
 
-    const title = Add_Text(this.scene, Game_Width / 2, 250, titleText, {
+    const title = Add_Text(this.scene, Game_Width / 2, 202, titleText, {
       fontFamily: "sans-serif",
       fontSize: `${44}px`,
       color: titleColor,
@@ -143,13 +146,24 @@ class HudView {
     });
     title.setOrigin(0.5);
 
+    const mode = Add_Text(this.scene, Game_Width / 2, 258, Get_Play_Mode_Label(playMode), {
+      fontFamily: "sans-serif",
+      fontSize: `${18}px`,
+      color: "#9cf2d7",
+      fontStyle: "bold",
+      stroke: "#0b1017",
+      strokeThickness: 3,
+    });
+    mode.setOrigin(0.5);
+
+    const detailFontSize = `${population}`.length >= 8 ? 17 : 22;
     const detail = Add_Text(this.scene, 
       Game_Width / 2,
-      322,
-      `${Get_Play_Mode_Label(playMode)}\n${reason}\nTIME ${elapsedSeconds.toFixed(2)}s\n人数 ${population}`,
+      338,
+      `${reason}\nTIME ${elapsedSeconds.toFixed(2)}s\n人数 ${population}`,
       {
         fontFamily: "sans-serif",
-        fontSize: `${22}px`,
+        fontSize: `${detailFontSize}px`,
         color: "#ffffff",
         fontStyle: "bold",
         align: "center",
@@ -161,7 +175,7 @@ class HudView {
     detail.setOrigin(0.5);
 
     const restartLabel = isTimeAttackUnlocked ? "SPACE RETRY    T TIME ATTACK" : "SPACE RETRY";
-    const restart = Add_Text(this.scene, Game_Width / 2, didUnlockTimeAttack ? 482 : 450, restartLabel, {
+    const restart = Add_Text(this.scene, Game_Width / 2, didUnlockTimeAttack ? 492 : 458, restartLabel, {
       fontFamily: "sans-serif",
       fontSize: `${20}px`,
       color: "#ffd166",
@@ -171,10 +185,10 @@ class HudView {
     });
     restart.setOrigin(0.5);
 
-    this.overlayGroup.addMultiple([title, detail, restart]);
+    this.overlayGroup.addMultiple([title, mode, detail, restart]);
 
     if (didUnlockTimeAttack) {
-      const unlock = Add_Text(this.scene, Game_Width / 2, 432, "TIME ATTACK UNLOCKED", {
+      const unlock = Add_Text(this.scene, Game_Width / 2, 444, "TIME ATTACK UNLOCKED", {
         fontFamily: "sans-serif",
         fontSize: `${20}px`,
         color: "#3ddc97",
@@ -204,9 +218,17 @@ class HudView {
 
    // 人数が変わった瞬間の表示
   showFloatingResult(text, x) {
+    let floatingFontSize = 26;
+
+    if (text.length >= 15) {
+      floatingFontSize = 16;
+    } else if (text.length >= 11) {
+      floatingFontSize = 20;
+    }
+
     const floatingText = Add_Text(this.scene, x, Player_Y - 78, text, {
       fontFamily: "sans-serif",
-      fontSize: `${26}px`,
+      fontSize: `${floatingFontSize}px`,
       color: "#ffffff",
       fontStyle: "bold",
       stroke: "#0b1017",
