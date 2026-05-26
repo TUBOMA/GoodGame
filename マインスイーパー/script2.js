@@ -28,8 +28,9 @@ updateUI();
 
 // ===== 敵撃破 =====
 function defeatEnemy() {
-  coin += 5;
-
+  if (typeof GameSystem !== 'undefined') {
+    GameSystem.addCoins(100); // 数字は一旦100統一で 調整は後々
+  }
   // 撃破時に一瞬小さくする演出
   enemyEl.style.transform = "scale(0)";
   setTimeout(() => {
