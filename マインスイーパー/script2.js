@@ -26,17 +26,11 @@ function updateUI() {
 
 updateUI();
 
-
 // ===== 敵撃破 =====
 function defeatEnemy() {
-
-  // GameSystemのコイン追加
-  if (typeof GameSystem !== 'undefined') {
-    GameSystem.addCoins(100); // 数字は一旦100統一
-  }
-
-  // ローカル用コイン
-  gainCoins(100);
+  /*if (typeof GameSystem !== 'undefined') {
+    GameSystem.addCoins(100); // 数字は一旦100統一で 調整は後々
+  }*/
 
   // 撃破時に一瞬小さくする演出
   enemyEl.style.transform = "scale(0)";
@@ -47,14 +41,8 @@ function defeatEnemy() {
   // インフレ
   maxHp = Math.floor(maxHp * 1.2 + 10);
   hp = maxHp;
-
   updateUI();
-}
-
-// ===== コイン加算 =====
-function gainCoins(amount) {
-  coin += amount;
-  updateUI();
+  gainCoins(100);
 }
 
 // ===== 攻撃処理（共通） =====
