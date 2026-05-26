@@ -54,6 +54,7 @@ function defeatEnemy() {
 // ===== コイン加算 =====
 function gainCoins(amount) {
   coin += amount;
+  GameSystem.addCoins(100);
   updateUI();
 }
 
