@@ -5,14 +5,15 @@ const scoreDisplay = document.getElementById('scoreDisplay');
 const missDisplay = document.getElementById('missDisplay');
 const highScoreDisplay = document.getElementById('highScoreDisplay');
 const messageDisplay = document.getElementById('message');
-const HIGHSCORE_KEY = 'memoryGameHighScore';
+const GAME_ID = 'sinnkeisuijyaku';
 
 let cardsFlipped = 0;
 let turns = 0;
 let miss = 0;
 let scores = 0;
 let combos = 0;
-let misslimit = 6;
+//let misslimit = 6;
+let BASE_MISS_LIMIT = 6;
 let firstCard = null;
 let secondCard = null;
 let newRecordTimer = null;
@@ -20,8 +21,11 @@ let boardLock = false;
 let isGameActive = false;
 
 function loadHighScore() {
-    const savedScore = localStorage.getItem(HIGHSCORE_KEY);
-    return savedScore ? parseInt(savedScore, 10) : 0;
+    if (typeof GameSystem === 'undefined') {
+        return 0;
+    }
+    const myData = GameSystem.loadGameData(GAME_ID);
+    return myData.highScore || 0;
 }
 
 function updateHighScoreDisplay(isNewRecord = false) {
@@ -42,6 +46,16 @@ function updateHighScoreDisplay(isNewRecord = false) {
             updateHighScoreDisplay();
         }, 2000);
     }
+}
+
+function saveHighScore(newscore) {
+    if (typeof GameSystem === 'undefined') {
+        return;
+    }
+
+    const myData = GameSystem.loadGameData(GAME_ID);
+    myData.highScore = Math.max(myData.highScore || 0, newscore);
+    GameSystem.saveGameData(GAME_ID, myData);
 }
 
 function generateAndShuffleCards() {
@@ -150,8 +164,7 @@ function unflipCards() {
         missDisplay.textContent = `ミス: ${miss}`;
 
         if (miss >= misslimit) {
-            messageDisplay.textContent = 'ゲームオーバー！';
-            gameClear();
+            gameOver();
         }
     }, 500);
 }
@@ -161,19 +174,30 @@ function resetBoard() {
     boardLock = false;
 }
 
-function gameClear() {
-    isGameActive = false;
-    messageDisplay.textContent = `終了　スコア: ${scores}点！`;
-    startButton.disabled = false;
-    resetButton.disabled = true;
-    startButton.textContent = 'もう一度プレイ';
+function gameOver() {
+    messageDisplay.textContent = `ゲームオーバー！スコア: ${scores}点！`;
     if (typeof GameSystem !== 'undefined') {
         GameSystem.addCoins(100); // 数字は一旦100統一で 調整は後々
     }
+    gameEnd();
+}
 
+function gameClear() {
+    messageDisplay.textContent = `クリア！スコア: ${scores}点！`;
+    if (typeof GameSystem !== 'undefined') {
+        GameSystem.addCoins(200); // 数字は一旦100統一で 調整は後々
+    }
+    gameEnd();
+}
+
+function gameEnd() {
+    isGameActive = false;
+    startButton.disabled = false;
+    resetButton.disabled = true;
+    startButton.textContent = 'もう一度プレイ';
     const currentHighScore = loadHighScore();
     if (scores > currentHighScore) {
-        localStorage.setItem(HIGHSCORE_KEY, scores);
+        saveHighScore(scores);
         updateHighScoreDisplay(true);
     } else {
         updateHighScoreDisplay();
@@ -201,10 +225,8 @@ function startGame() {
     resetBoard();
     updateHighScoreDisplay();
     if (typeof GameSystem !== 'undefined') {
-        if (typeof GameSystem !== 'undefined') {
-          // 未購入なら 0 が返ってくるので、何も起きず安全です
-          misslimit += GameSystem.getItemCount('s_miss_plus');
-        }
+        // 未購入なら 0 が返ってくるので、何も起きず安全です
+        misslimit = BASE_MISS_LIMIT + GameSystem.getItemCount('s_miss_plus');
     }
 
     scoreDisplay.textContent = `スコア: ${scores}`;
