@@ -2,50 +2,55 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>クリッカーゲーム</title>
-  <link rel="stylesheet" href="style2.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <!-- ===== メイン ===== -->
 <div id="mainGame">
-  <!-- ホームに戻るボタン -->
+  <!-- ★ ここにホームに戻るボタンを追加 ★ -->
   <div style="text-align: left; margin: 10px;">
-    <a href="../index.html"><button class="btn-sub">◀ ホームに戻る</button></a>
+    <a href="../index.html"><button>◀ ホームに戻る</button></a>
   </div>
 
   <h1>クリッカーゲーム</h1>
 
-  <!-- 敵のイラスト（画像）エリア -->
-  <div id="enemyContainer">
-    <!-- ⚠️ src="slime.png" を、用意した画像ファイル名や画像URLに書き換えてください -->
-    <img id="enemy" src="slime.png" alt="敵のイラスト">
-  </div>
+  <p>敵HP: <span id="hp"></span></p>
+  <button id="attackBtn">攻撃</button>
 
-  <!-- HPバー -->
-  <div class="hp-container">
-    <p>敵HP: <span id="hp"></span></p>
-    <progress id="hpBar" value="100" max="100"></progress>
-  </div>
-  
-  <button id="attackBtn" class="btn-main">💥 攻撃</button>
+  <p>攻撃力: <span id="attack">1</span></p>
+  <p>自動攻撃: <span id="auto">0</span></p>
+  <p>コイン: <span id="coin">0</span></p>
 
-  <!-- ステータス表示 -->
-  <div class="status-container">
-    <p>⚔️ 攻撃力: <span id="attack">1</span></p>
-    <p>🤖 自動攻撃: <span id="auto">0</span>/秒</p>
-    <p>💰 コイン: <span id="coin">0</span></p>
-  </div>
+  <h3>ショップ</h3>
+  <button id="atkUp">攻撃力 +1 (10コイン)</button>
+  <button id="autoUp">自動攻撃 +1 (20コイン)</button>
 
+  <hr>
+  <h3>ミニゲーム</h3>
+  <button id="toMemory">神経衰弱</button>
+  <button id="toDodge">回避ゲーム</button>
 </div>
 
-<!-- 共通 -->
-<script src="../master_data.js"></script>
-<script src="../common/main.js"></script>
+<!-- ===== 神経衰弱 ===== -->
+<div id="memoryGame" style="display:none;">
+  <h1>神経衰弱</h1>
+  <p>ミス: <span id="miss">0</span> / 5</p>
 
-<!-- このゲーム用 -->
-<script src="./script2.js"></script>
+  <div id="board"></div>
 
+  <button id="backFromMemory">戻る</button>
+</div>
+
+<!-- ===== 回避ゲーム ===== -->
+<div id="dodgeGame" style="display:none;">
+  <h1>回避ゲーム</h1>
+  <p>生存時間: <span id="time">0</span></p>
+  <canvas id="canvas" width="400" height="300"></canvas>
+  <button id="backFromDodge">戻る</button>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>

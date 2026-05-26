@@ -1,86 +1,89 @@
-// --- ショップのデータ一覧 ---
-// game: 'l'(ラストウォー), 'c'(クリッカー), 's'(神経衰弱), 'i'(イライラ棒), 'common'(全体)
-const shopData = GameMasterData.shop;
-
-// --- ソート（並び替え）のルール ---
-// 1. ゲーム順 (ラストウォー -> クリッカー -> 神経衰弱 -> イライラ棒 -> 共通)
-const gameOrder = { 'l': 1, 'c': 2, 's': 3, 'i': 4, 'common': 5 };
-
-shopData.sort((a, b) => {
-  if (gameOrder[a.game] !== gameOrder[b.game]) {
-    return gameOrder[a.game] - gameOrder[b.game]; // ゲーム順
-  }
-  if (a.category !== b.category) {
-    return a.category.localeCompare(b.category); // カテゴリのあいうえお順
-  }
-  return a.tier - b.tier; // 同じゲーム・カテゴリなら、度合い(tier)の低い順
-});
-
-// --- 値段計算ルール ---
-function calculatePrice(basePrice, currentQuan, type, stepValue) {
-  if (type === 'fixed') return basePrice;
-  if (type === 'add') return basePrice + (stepValue * currentQuan);
-  if (type === 'multiply') return Math.floor(basePrice * Math.pow(stepValue, currentQuan));
-  return basePrice * (currentQuan + 1); // default
-}
-
-function updateItemUI(itemDiv, btn, itemId, basePrice, type, stepValue, max) {
-  const currentQuan = GameSystem.getItemCount(itemId);
-  const nextPrice = calculatePrice(basePrice, currentQuan, type, stepValue);
-  const priceDiv = itemDiv.querySelector('.price');
-  
-  if (priceDiv) priceDiv.textContent = nextPrice + ' C';
-  
-  btn.textContent = currentQuan > 0 ? `購入する (所持: ${currentQuan}個)` : "購入する";
-
-  if (max > 0 && currentQuan >= max) {
-    btn.textContent = "購入上限（SOLD OUT）";
-    btn.disabled = true;
-    btn.classList.add('sold-out');
-    if (priceDiv) priceDiv.textContent = "-";
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-  const container = document.getElementById('shop-list');
+  const buyButtons = document.querySelectorAll('.buy-btn');
 
-  // ソート済みのデータを回してHTMLを作る
-  shopData.forEach(item => {
-    const card = document.createElement('div');
-    card.className = 'shop-item';
-    card.dataset.id = item.id;
-    card.innerHTML = `
-      <h3>${item.name}</h3>
-      <p>${item.desc}</p>
-      <div class="price">${item.basePrice} C</div>
-      <button class="btn buy-btn">購入する</button>
-    `;
-    container.appendChild(card);
+  // ★新規：値段の計算ルールをまとめた関数
+  function calculatePrice(basePrice, currentQuan, type, stepValue) {
+    if (type === 'fixed') {
+      // 1. 固定（何度買っても同じ値段）
+      return basePrice;
+      
+    } else if (type === 'add') {
+      // 2. 加算（買うたびに +〇〇コイン増える）
+      return basePrice + (stepValue * currentQuan);
+      
+    } else if (type === 'multiply') {
+      // 3. 掛け算（買うたびに 〇〇倍になる ※端数切り捨て）
+      return Math.floor(basePrice * Math.pow(stepValue, currentQuan));
+      
+    } else {
+      // 4. デフォルト（今まで通り: 1倍, 2倍, 3倍...）
+      return basePrice * (currentQuan + 1);
+    }
+  }
 
-    // ボタンのイベントリスナーを設定
-    const btn = card.querySelector('.buy-btn');
+  function updateItemUI(itemDiv, btn, itemId, basePrice, type, stepValue) {
+    const currentQuan = GameSystem.getItemCount(itemId);
     
-    // 初期表示の更新
-    updateItemUI(card, btn, item.id, item.basePrice, item.priceType, item.stepValue, item.max);
+    // 計算関数を使って次の値段を出す
+    const nextPrice = calculatePrice(basePrice, currentQuan, type, stepValue);
+
+    const priceDiv = itemDiv.querySelector('.price');
+    if (priceDiv) {
+      priceDiv.textContent = nextPrice + ' C';
+    }
+
+    if (currentQuan > 0) {
+      btn.textContent = `購入する (所持: ${currentQuan}個)`;
+    } else {
+      btn.textContent = "購入する";
+    }
+
+    const max = parseInt(itemDiv.dataset.max);
+    if (max && currentQuan >= max) {
+      btn.textContent = "購入上限（SOLD OUT）";
+      btn.disabled = true;
+      btn.classList.add('sold-out');
+      if (priceDiv) priceDiv.textContent = "-";
+    }
+  }
+
+  buyButtons.forEach(btn => {
+    const itemDiv = btn.closest('.shop-item');
+    const itemId = itemDiv.dataset.id;
+    const basePrice = parseInt(itemDiv.dataset.price);
+
+    // ★追加：HTMLから「上がり方の種類」と「数値」を読み取る
+    const priceType = itemDiv.dataset.pricetype || 'default';
+    const stepValue = parseFloat(itemDiv.dataset.step) || 0;
+
+    // 初期表示
+    updateItemUI(itemDiv, btn, itemId, basePrice, priceType, stepValue);
 
     btn.addEventListener('click', () => {
-      const currentQuan = GameSystem.getItemCount(item.id);
-      if (item.max > 0 && currentQuan >= item.max) return;
+      const currentQuan = GameSystem.getItemCount(itemId);
+      
+      const max = parseInt(itemDiv.dataset.max);
+      if (max && currentQuan >= max) return;
 
-      const actualPrice = calculatePrice(item.basePrice, currentQuan, item.priceType, item.stepValue);
-      const status = GameSystem.tryPurchaseItem(item.id, actualPrice);
+      // 実際の値段を計算する
+      const actualPrice = calculatePrice(basePrice, currentQuan, priceType, stepValue);
+      
+      const status = GameSystem.tryPurchaseItem(itemId, actualPrice);
 
       if (status === 'NO_COINS') {
+        const originalText = btn.textContent;
         btn.textContent = "コイン不足！";
         btn.style.backgroundColor = "#e74c3c";
         btn.style.color = "white";
+        
         setTimeout(() => {
-          updateItemUI(card, btn, item.id, item.basePrice, item.priceType, item.stepValue, item.max);
+          updateItemUI(itemDiv, btn, itemId, basePrice, priceType, stepValue);
           btn.style.backgroundColor = "";
           btn.style.color = "";
         }, 1500);
+        
       } else if (status === 'SUCCESS') {
-        updateItemUI(card, btn, item.id, item.basePrice, item.priceType, item.stepValue, item.max);
+        updateItemUI(itemDiv, btn, itemId, basePrice, priceType, stepValue);
       }
     });
   });

@@ -12,7 +12,7 @@ function gainCoins(amount) {
 function testUnlockAchievement() {
   if (typeof GameSystem !== 'undefined') {
     // 共通システムの実績解除機能を呼び出す
-    GameSystem.unlockAchievement('achieve_all_play_1');
+    GameSystem.unlockAchievement('play_first', 'はじめての冒険');
   } else {
     console.error("GameSystemが見つかりません。");
   }
