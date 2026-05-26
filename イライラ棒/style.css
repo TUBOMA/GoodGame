@@ -52,10 +52,10 @@ button:hover,
   padding: 12px 0;
 }
 
-/* スコアと操作説明を縦画面に収まる2列で表示します。 */
+/* スコアと操作説明を縦画面に収まる4列で表示します。 */
 .top-bar {
   display: grid;
-  grid-template-columns: 0.7fr 1.3fr;
+  grid-template-columns: 1fr 1.2fr 1.2fr 1.5fr;
   gap: 10px;
   align-items: stretch;
   margin-bottom: 0;
@@ -284,7 +284,7 @@ button:hover,
   }
 
   .top-bar {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
 
@@ -322,5 +322,25 @@ button:hover,
 
   .zone {
     font-size: 0.9rem;
+  }
+}
+
+/* 📌 「◀ メイン画面へ」ボタンを画面の左上に絶対配置する設定 */
+.main-back-button {
+  position: absolute;   /* 画面全体の絶対位置で配置 */
+  left: 16px;           /* 左端からの隙間 */
+  top: 16px;            /* 上端からの隙間 */
+  z-index: 100;         /* 他の要素より手前に表示 */
+  padding: 8px 14px;    /* 邪魔にならないよう少しだけ小ぶりに */
+  font-size: 0.88rem;   /* 文字サイズを調整 */
+}
+
+/* 画面サイズが小さい（スマホなど）時は、ゲーム画面と重ならないようさらにコンパクトに */
+@media (max-width: 768px) {
+  .main-back-button {
+    left: 8px;
+    top: 8px;
+    padding: 6px 10px;
+    font-size: 0.8rem;
   }
 }
