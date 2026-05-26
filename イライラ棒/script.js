@@ -218,9 +218,9 @@ function makePath(columns, rows) {
 // STARTやGOALを、対応するマスの中に配置します。
 function placeZone(zone, column, row, cellWidth, cellHeight, areaHeight) {
   const padding = 8;
-  const width = Math.max(34, cellWidth - padding * 2);
-  const height = Math.max(34, cellHeight - padding * 2);
-  const left = column * cellWidth + padding;
+  const width = Math.max(40, cellWidth - padding * 2);
+  const height = Math.max(40, cellHeight - padding * 2);
+  const left = column * cellWidth + (cellWidth - width) / 2;
   const top = Math.min(
     areaHeight - height - padding,
     Math.max(padding, row * cellHeight + (cellHeight - height) / 2)
@@ -421,7 +421,7 @@ function resetRound() {
 function restartGame() {
   updateScore(0);
   resetRound();
-  generateCourse(); // 📌 ここで最新のアイテム数を反映して再生成されます
+  generateCourse();
 }
 
 // 2つの四角形が重なっているかを判定します。
@@ -487,7 +487,7 @@ function hitObstacle(cursorRect) {
 
 // ミスした時の処理です。
 function failRound() {
-  resetRound();
+  // タイマーは保持するため、resetRound() は呼び出さない
   resetPlayerToStart();
   gameArea.classList.add("is-danger");
 
@@ -554,8 +554,11 @@ function updateGame(currentTime) {
     if (!isPlaying) {
       isPlaying = true;
       
-      isTimerRunning = true;
-      startTime = currentTime; // 動き始めた時間を記録
+      // 初めて動き出した時のみタイマーをセット
+      if (!isTimerRunning) {
+          isTimerRunning = true;
+          startTime = currentTime; 
+      }
 
       gameArea.classList.add("is-playing");
     }
