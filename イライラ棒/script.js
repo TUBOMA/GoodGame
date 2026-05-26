@@ -4,10 +4,16 @@ const startZone = document.getElementById("startZone");
 const goalZone = document.getElementById("goalZone");
 const cursor = document.getElementById("cursor");
 const scoreText = document.getElementById("score");
+const timeText = document.getElementById("time");
+const bestTimeText = document.getElementById("bestTime");
 const restartButton = document.getElementById("restartButton");
 
 // ゲーム全体の状態を保存する変数です。
 let score = 0;
+let startTime = 0;
+let currentElapsedTime = 0;
+let bestRecord = null;
+let isTimerRunning = false;
 let isPlaying = false;
 let isGameClear = false;
 let resizeTimer = 0;
@@ -212,9 +218,9 @@ function makePath(columns, rows) {
 // STARTやGOALを、対応するマスの中に配置します。
 function placeZone(zone, column, row, cellWidth, cellHeight, areaHeight) {
   const padding = 8;
-  const width = Math.max(34, cellWidth - padding * 2);
-  const height = Math.max(34, cellHeight - padding * 2);
-  const left = column * cellWidth + padding;
+  const width = Math.max(40, cellWidth - padding * 2);
+  const height = Math.max(40, cellHeight - padding * 2);
+  const left = column * cellWidth + (cellWidth - width) / 2;
   const top = Math.min(
     areaHeight - height - padding,
     Math.max(padding, row * cellHeight + (cellHeight - height) / 2)
@@ -401,6 +407,11 @@ function updateScore(nextScore) {
 function resetRound() {
   isPlaying = false;
   isGameClear = false;
+  
+  isTimerRunning = false;
+  currentElapsedTime = 0;
+  timeText.textContent = "0.00";
+
   pressedKeys.clear();
   gameArea.classList.remove("is-playing", "is-danger");
   cursor.style.display = "block";
@@ -410,7 +421,7 @@ function resetRound() {
 function restartGame() {
   updateScore(0);
   resetRound();
-  generateCourse(); // 📌 ここで最新のアイテム数を反映して再生成されます
+  generateCourse();
 }
 
 // 2つの四角形が重なっているかを判定します。
@@ -476,7 +487,7 @@ function hitObstacle(cursorRect) {
 
 // ミスした時の処理です。
 function failRound() {
-  resetRound();
+  // タイマーは保持するため、resetRound() は呼び出さない
   resetPlayerToStart();
   gameArea.classList.add("is-danger");
 
@@ -489,9 +500,22 @@ function failRound() {
 function clearRound() {
   isGameClear = true;
   isPlaying = false;
+  
+  isTimerRunning = false; // タイマーストップ
+  if (bestRecord === null || currentElapsedTime < bestRecord) {
+    bestRecord = currentElapsedTime;
+    bestTimeText.textContent = bestRecord.toFixed(2);
+  }
+
+  // タイムに応じたスコア計算（10秒まで1000、それ以降は1秒につき10点マイナス）
+  let addedScore = 1000;
+  if (currentElapsedTime > 10) {
+    addedScore = Math.max(0, Math.round(1000 - (currentElapsedTime - 10) * 10));
+  }
+
   pressedKeys.clear();
-  updateScore(score + 100);
-  gainCoins(100);
+  updateScore(score + addedScore);
+  gainCoins(addedScore);
 
   gameArea.classList.remove("is-playing");
 
@@ -529,6 +553,13 @@ function updateGame(currentTime) {
   if (!isGameClear && hasMovementInput()) {
     if (!isPlaying) {
       isPlaying = true;
+      
+      // 初めて動き出した時のみタイマーをセット
+      if (!isTimerRunning) {
+          isTimerRunning = true;
+          startTime = currentTime; 
+      }
+
       gameArea.classList.add("is-playing");
     }
 
@@ -537,6 +568,12 @@ function updateGame(currentTime) {
       playerX + (moveX / length) * playerSpeed * deltaTime,
       playerY + (moveY / length) * playerSpeed * deltaTime
     );
+  }
+
+  // タイマーの更新と表示
+  if (isTimerRunning) {
+    currentElapsedTime = (currentTime - startTime) / 1000;
+    timeText.textContent = currentElapsedTime.toFixed(2);
   }
 
   if (isPlaying && playerRect && hitObstacle(playerRect)) {
