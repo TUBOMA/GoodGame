@@ -43,6 +43,25 @@ function gainCoins(amount) {
   }
 }
 
+// 障害物を消すアイテムの所持数を取得します（安全性を強化）
+function getHazardRemovalCount() {
+  if (typeof GameSystem === "undefined") {
+    return 0;
+  }
+
+  // getItemCount が存在すればその個数を返す
+  if (typeof GameSystem.getItemCount === "function") {
+    return GameSystem.getItemCount("i_bougai_ikkokesu");
+  }
+
+  // hasItem しかない場合は、持っていれば1、なければ0を返す
+  if (typeof GameSystem.hasItem === "function" && GameSystem.hasItem("i_bougai_ikkokesu")) {
+    return 1;
+  }
+
+  return 0;
+}
+
 function cellKey(column, row) {
   return `${column},${row}`;
 }
@@ -66,7 +85,6 @@ function addOpenCell(openCells, column, row, columns, rows) {
 }
 
 // 大きめのマスでランダムな一本道を作ります。
-// ここではまだ実際のゲーム画面の細かいマスには変換していません。
 function tryMakeCoarsePath(coarseColumns, coarseRows) {
   const goal = { column: coarseColumns - 1, row: coarseRows - 1 };
   const startCell = { column: 0, row: 0 };
@@ -302,36 +320,60 @@ function isNextToHazard(cell, selectedCells) {
   });
 }
 
-// 道の直線部分にカッターを置きます。曲がり角と隣接配置は避けます。
+// 道にカッター（障害物）を配置します。アイテムの個数分、総数が減ります。
 function addHazards(pathCells, cellWidth, cellHeight) {
+  const baseHazardCount = 6;
+  // アイテム数に応じて設置数を決定（持っていない時は6、1個につき1減少、最低0個）
+  const hazardCount = Math.max(0, baseHazardCount - getHazardRemovalCount());
+
+  if (hazardCount === 0) return; // 障害物数が0ならこれ以上何もしない
+
+  // 直線の候補マス
   const candidateCells = pathCells
     .map((cell, index) => ({ ...cell, index }))
     .slice(4, -4)
     .filter((cell) => isStraightPathCell(pathCells, cell.index));
-  const hazardCells = shuffle(candidateCells);
-  const hazardCount = Math.min(6, hazardCells.length);
-  const selectedHazards = [];
 
-  for (const cell of hazardCells) {
-    if (selectedHazards.length >= hazardCount) {
-      break;
-    }
+  // 直線以外の予備候補マス
+  const fallbackCells = pathCells
+    .map((cell, index) => ({ ...cell, index }))
+    .slice(4, -4);
+
+ marge_test
+  const selectedHazards = [];
+  const shuffledCandidates = shuffle(candidateCells);
+
+  // 1つ目のループ：隣り合わない直線上のマスを優先して選ぶ
+  for (const cell of shuffledCandidates) {
+    if (selectedHazards.length >= hazardCount) break;
 
     if (!isNextToHazard(cell, selectedHazards)) {
       selectedHazards.push(cell);
     }
   }
 
-  for (const cell of hazardCells) {
-    if (selectedHazards.length >= hazardCount) {
-      break;
-    }
+  // 2つ目のループ：まだ足りなければ、隣り合う直線上のマスも選ぶ
+  for (const cell of shuffledCandidates) {
+    if (selectedHazards.length >= hazardCount) break;
 
-    if (!selectedHazards.includes(cell)) {
+    if (!selectedHazards.some((selected) => selected.index === cell.index)) {
       selectedHazards.push(cell);
     }
   }
 
+  // 3つ目のループ：それでもまだ足りなければ、曲がり角なども含めて選ぶ
+  const shuffledFallbacks = shuffle(fallbackCells);
+  for (const cell of shuffledFallbacks) {
+    if (selectedHazards.length >= hazardCount) break;
+
+    if (!selectedHazards.some((selected) => selected.index === cell.index)) {
+         marge_test
+      selectedHazards.push(cell);
+    }
+  }
+
+  // 決定した位置にカッターを生成・配置
+     marge_test
   selectedHazards.forEach((cell, index) => {
     const size = Math.max(22, Math.min(32, Math.min(cellWidth, cellHeight) * 0.37));
     const hazard = document.createElement("div");
@@ -358,7 +400,7 @@ function updateScore(nextScore) {
   scoreText.textContent = String(score);
 }
 
-// プレイ状態を初期状態に戻します。スコアはここでは変えません。
+// プレイ状態を初期状態に戻します。
 function resetRound() {
   isPlaying = false;
   isGameClear = false;
@@ -367,11 +409,11 @@ function resetRound() {
   cursor.style.display = "block";
 }
 
-// リスタートボタン用です。スコアを0にしてコースも作り直します。
+// リスタートボタン用です。
 function restartGame() {
   updateScore(0);
   resetRound();
-  generateCourse();
+  generateCourse(); // 📌 ここで最新のアイテム数を反映して再生成されます
 }
 
 // 2つの四角形が重なっているかを判定します。
@@ -401,7 +443,7 @@ function updatePlayerRect() {
   playerRect = getCursorRect(playerX, playerY);
 }
 
-// プレイヤーを指定位置へ移動します。ゲームエリア外には出ないように制限します。
+// プレイヤーを指定位置へ移動します。
 function movePlayerTo(x, y) {
   const areaRect = gameArea.getBoundingClientRect();
   playerX = Math.min(areaRect.right - playerRadius, Math.max(areaRect.left + playerRadius, x));
@@ -435,7 +477,7 @@ function hitObstacle(cursorRect) {
   return false;
 }
 
-// ミスした時の処理です。STARTに戻して画面を少し揺らします。
+// ミスした時の処理です。
 function failRound() {
   resetRound();
   resetPlayerToStart();
@@ -446,7 +488,7 @@ function failRound() {
   }, 260);
 }
 
-// ゴールした時の処理です。スコアを増やして次のコースを生成します。
+// ゴールした時の処理です。
 function clearRound() {
   isGameClear = true;
   isPlaying = false;
@@ -475,7 +517,6 @@ function hasMovementInput() {
 }
 
 // 毎フレーム呼ばれるゲームのメイン処理です。
-// キー入力、移動、壁/障害物/ゴール判定をここで行います。
 function updateGame(currentTime) {
   const deltaTime = Math.min(0.04, (currentTime - lastFrameTime) / 1000 || 0);
   lastFrameTime = currentTime;
@@ -483,21 +524,10 @@ function updateGame(currentTime) {
   let moveX = 0;
   let moveY = 0;
 
-  if (pressedKeys.has("up")) {
-    moveY -= 1;
-  }
-
-  if (pressedKeys.has("down")) {
-    moveY += 1;
-  }
-
-  if (pressedKeys.has("left")) {
-    moveX -= 1;
-  }
-
-  if (pressedKeys.has("right")) {
-    moveX += 1;
-  }
+  if (pressedKeys.has("up")) moveY -= 1;
+  if (pressedKeys.has("down")) moveY += 1;
+  if (pressedKeys.has("left")) moveX -= 1;
+  if (pressedKeys.has("right")) moveX += 1;
 
   if (!isGameClear && hasMovementInput()) {
     if (!isPlaying) {
@@ -523,7 +553,7 @@ function updateGame(currentTime) {
   animationId = window.requestAnimationFrame(updateGame);
 }
 
-// キーを押した時、WASDまたは矢印キーなら移動状態として記録します。
+// キーを押した時
 window.addEventListener("keydown", (event) => {
   const key = keyMap[event.key.toLowerCase()];
 
@@ -533,7 +563,7 @@ window.addEventListener("keydown", (event) => {
   }
 });
 
-// キーを離した時、移動状態から外します。
+// キーを離した時
 window.addEventListener("keyup", (event) => {
   const key = keyMap[event.key.toLowerCase()];
 
@@ -542,7 +572,7 @@ window.addEventListener("keyup", (event) => {
   }
 });
 
-// 画面サイズが変わったら、マスの大きさも変わるのでコースを作り直します。
+// 画面サイズが変わったら再構築
 window.addEventListener("resize", () => {
   window.clearTimeout(resizeTimer);
   resizeTimer = window.setTimeout(() => {
@@ -551,7 +581,7 @@ window.addEventListener("resize", () => {
   }, 180);
 });
 
-// 最初の準備です。コースを作り、ゲームループを開始します。
+// 最初の準備
 resetRound();
 generateCourse();
 animationId = window.requestAnimationFrame(updateGame);
