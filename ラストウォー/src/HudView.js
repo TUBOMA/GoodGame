@@ -1,6 +1,6 @@
 "use strict";
 
-//道関係以外の表示の管理のやつ
+//画面上部の数値、モード選択、開始・終了表示を管理するクラス
 class HudView {
   constructor(scene) {
     this.scene = scene;
@@ -9,78 +9,55 @@ class HudView {
     this.outsidePhase = document.getElementById("outside-phase");
     this.outsideTime = document.getElementById("outside-time");
     this.outsideBest = document.getElementById("outside-best");
-    this.outsideMode = document.getElementById("outside-mode");
-
-    this.populationText = Add_Text(this.scene, 18, 16, "", this.createTextStyle(24));
-    this.phaseText = Add_Text(this.scene, 18, 48, "", this.createTextStyle(18));
-    this.timeText = Add_Text(this.scene, 18, 76, "", this.createTextStyle(18));
-    this.bestText = Add_Text(this.scene, Game_Width - 18, 16, "", this.createTextStyle(18));
-    this.bestText.setOrigin(1, 0);
-
-    this.messageText = Add_Text(this.scene, Game_Width / 2, 122, "", {
-      fontFamily: "sans-serif",
-      fontSize: `${22}px`,
-      color: "#ffffff",
-      fontStyle: "bold",
-      align: "center",
-    });
-    this.messageText.setOrigin(0.5);
-
-    this.populationText.setDepth(100);
-    this.phaseText.setDepth(100);
-    this.timeText.setDepth(100);
-    this.bestText.setDepth(100);
-    this.messageText.setDepth(100);
-
-    //上部パネルに表示する数値は、ゲーム画面内では重複表示しない
-    this.populationText.setVisible(false);
-    this.phaseText.setVisible(false);
-    this.timeText.setVisible(false);
-    this.bestText.setVisible(false);
+    this.normalModeRadio = document.getElementById("normal-mode");
+    this.timeAttackModeRadio = document.getElementById("time-attack-mode");
+    this.modeMessage = document.getElementById("mode-message");
   }
 
-  //文字生成のためのやつ
-  createTextStyle(size) {
-    return {
-      fontFamily: "sans-serif",
-      fontSize: `${size}px`,
-      color: "#f5f7fb",
-      fontStyle: "bold",
-      stroke: "#0b1017",
-      strokeThickness: 3,
-    };
-  }
-
-  //各表示(画面上の数値)を更新するためのやつ
-  update(population, phaseIndex, phase, elapsedSeconds, bestTime, playMode) {
+  //画面上部の数値表示を更新する
+  update(population, phaseIndex, elapsedSeconds, bestTime) {
     const phaseNumber = Math.min(phaseIndex + 1, Phases.length);
-    const phaseCount = Phases.length;
+    const populationText = `${population}`;
 
-    this.populationText.setText(`人数 ${population}`);
-    this.phaseText.setText(`PHASE ${phaseNumber}/${phaseCount}  SPEED ${phase.speed}`);
-    this.timeText.setText(`TIME ${elapsedSeconds.toFixed(2)}s`);
-
-    this.outsidePopulation.textContent = `${population}`;
-    const populationLength = `${population}`.length;
+    this.outsidePopulation.textContent = populationText;
+    const populationLength = populationText.length;
     this.outsidePopulation.classList.toggle("compact", populationLength >= 5);
     this.outsidePopulation.classList.toggle("very-compact", populationLength >= 8);
-    this.outsidePhase.textContent = `${phaseNumber} / ${phaseCount}`;
+    this.outsidePhase.textContent = `${phaseNumber} / ${Phases.length}`;
     this.outsideTime.textContent = `${elapsedSeconds.toFixed(2)}s`;
-    this.outsideMode.textContent = Get_Play_Mode_Label(playMode);
-    this.outsideMode.classList.toggle("time-attack", playMode === Play_Mode.Time_Attack);
-
-    //
-    if (bestTime > 0) {
-      this.bestText.setText(`BEST ${bestTime.toFixed(2)}s`);
-      this.outsideBest.textContent = `${bestTime.toFixed(2)}s`;
-    } else {
-      this.bestText.setText("BEST --");
-      this.outsideBest.textContent = "--";
-    }
+    this.outsideBest.textContent = bestTime > 0 ? `${bestTime.toFixed(2)}s` : "--";
   }
 
-  showStartScreen(isTimeAttackUnlocked) {
-    // タイトル画面
+  //画面下のモード選択をゲーム進行へ伝えるための処理
+  setModeInputHandler(onModeSelected) {
+    this.normalModeRadio.addEventListener("change", () => {
+      if (this.normalModeRadio.checked) {
+        onModeSelected(Play_Mode.Normal);
+      }
+    });
+
+    this.timeAttackModeRadio.addEventListener("change", () => {
+      if (this.timeAttackModeRadio.checked) {
+        onModeSelected(Play_Mode.Time_Attack);
+      }
+    });
+  }
+
+  //選択中のモードと、プレイ中に変更できない状態を表示へ反映する
+  updateModeSelection(playMode, isPlaying) {
+    this.normalModeRadio.checked = playMode === Play_Mode.Normal;
+    this.timeAttackModeRadio.checked = playMode === Play_Mode.Time_Attack;
+    this.normalModeRadio.disabled = isPlaying;
+    this.timeAttackModeRadio.disabled = isPlaying;
+  }
+
+  //モードを選べない時の案内を表示・消去する
+  setModeMessage(message) {
+    this.modeMessage.textContent = message;
+  }
+
+  //開始画面を表示する
+  showStartScreen() {
     this.clearOverlay();
 
     this.overlayGroup = this.scene.add.group();
@@ -96,7 +73,7 @@ class HudView {
     });
     title.setOrigin(0.5);
 
-    const start = Add_Text(this.scene, Game_Width / 2, 294, "SPACE NORMAL", {
+    const start = Add_Text(this.scene, Game_Width / 2, 294, "SPACE START", {
       fontFamily: "sans-serif",
       fontSize: `${24}px`,
       color: "#3ddc97",
@@ -106,28 +83,12 @@ class HudView {
     });
     start.setOrigin(0.5);
 
-
-
     this.overlayGroup.addMultiple([title, start]);
-
-    if (isTimeAttackUnlocked) {
-      const timeAttackStart = Add_Text(this.scene, Game_Width / 2, 350, "T  TIME ATTACK", {
-        fontFamily: "sans-serif",
-        fontSize: `${24}px`,
-        color: "#ffd166",
-        fontStyle: "bold",
-        stroke: "#0b1017",
-        strokeThickness: 4,
-      });
-      timeAttackStart.setOrigin(0.5);
-      this.overlayGroup.add(timeAttackStart);
-    }
-
     this.overlayGroup.setDepth(200);
   }
 
-  showEndScreen(didClear, reason, elapsedSeconds, population, playMode, isTimeAttackUnlocked, didUnlockTimeAttack) {
-    // クリア・ゲームオーバー画面
+  //クリア・ゲームオーバー画面を表示する
+  showEndScreen(didClear, reason, elapsedSeconds, population, playMode, didUnlockTimeAttack) {
     this.clearOverlay();
 
     this.overlayGroup = this.scene.add.group();
@@ -174,7 +135,7 @@ class HudView {
     );
     detail.setOrigin(0.5);
 
-    const restartLabel = isTimeAttackUnlocked ? "SPACE RETRY    T TIME ATTACK" : "SPACE RETRY";
+    const restartLabel = "SPACE RETRY";
     const restart = Add_Text(this.scene, Game_Width / 2, didUnlockTimeAttack ? 492 : 458, restartLabel, {
       fontFamily: "sans-serif",
       fontSize: `${20}px`,
@@ -203,20 +164,7 @@ class HudView {
     this.overlayGroup.setDepth(200);
   }
 
-  // フェーズ開始メッセージ
-  showCenterMessage(text) {
-    this.messageText.setText(text);
-    this.messageText.setAlpha(1);
-
-    this.scene.tweens.add({
-      targets: this.messageText,
-      alpha: 0,
-      duration: 900,
-      delay: 500,
-    });
-  }
-
-   // 人数が変わった瞬間の表示
+  //人数が変わった瞬間の表示
   showFloatingResult(text, x) {
     let floatingFontSize = 26;
 
@@ -246,7 +194,7 @@ class HudView {
     });
   }
 
-    //タイトル画面や終了画面を消す処理
+  //タイトル画面や終了画面を消す
   clearOverlay() {
     if (this.overlayGroup) {
       this.overlayGroup.clear(true, true);

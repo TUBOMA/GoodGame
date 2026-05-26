@@ -3,7 +3,6 @@
 //プレイヤーの見た目と左右移動を担当するクラス
 class PlayerView {
   constructor(scene) {
-    //プレイヤー表示の作成
     this.scene = scene;
     this.currentLane = Lane.Left;
 
@@ -28,16 +27,13 @@ class PlayerView {
   }
 
   resetLane() {
-    //プレイヤーを左レーンに戻す処理
+    //新しいプレイでは左レーンから始める
     this.currentLane = Lane.Left;
     this.container.x = Left_Lane_X;
   }
 
   moveToLane(lane) {
-    //プレイヤーを指定レーンへ動かす処理
     this.currentLane = lane;
-
-    //
     const targetX = lane === Lane.Left ? Left_Lane_X : Right_Lane_X;
     this.scene.tweens.add({
       targets: this.container,
@@ -56,7 +52,7 @@ class PlayerView {
   }
 
   updatePopulation(population) {
-    //プレイヤー周りの人数表示
+    //プレイヤー周囲の点と人数表示を更新する
     this.populationText.setText(`${population}`);
     const populationLength = `${population}`.length;
 
@@ -76,7 +72,6 @@ class PlayerView {
     const firstX = -((dotCount - 1) * circleGap) / 2;
 
     this.dots.fillStyle(0xffffff, 0.92);
-
 
     for (let i = 0; i < dotCount; i += 1) {
       const x = firstX + i * circleGap;
