@@ -215,7 +215,7 @@ function makePath(columns, rows) {
   return makeActualPath(selectedPath || makeFallbackCoarsePath(coarseColumns, coarseRows), columns, rows);
 }
 
-// STARTやGOALを、対応するマスの中に配置します。
+// STARTやGOALを、対応するマスの中に配置
 function placeZone(zone, column, row, cellWidth, cellHeight, areaHeight) {
   const padding = 8;
   const width = Math.max(40, cellWidth - padding * 2);
