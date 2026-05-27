@@ -201,7 +201,7 @@ const GameSystem = {
             }
           }, 400); // 消えるアニメーションが終わるのを待つ
         }, 3500);
-      }
+      },
 
       // 画面に一時的な通知（トースト）を出す機能
       showToast: function(message) {

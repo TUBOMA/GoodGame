@@ -53,13 +53,16 @@ const GameMasterData = {
     ],
   
     shop: [
-        {id: 'l_plus', name: 'ラストウォー強化', desc: 'ラストウォーで最初の人が一人増えます。',　basePrice: 300, max: 0, game: 'l', category: 'buff', tier: 1,
-            calcPrice: (base, n) => base + Math.pow(n,2)*100},
-        {id: 'i_bougai_ikkokesu', name: '妨害キャンセラー', desc: 'イライラ棒の妨害ギミックが1つ消えます。',　basePrice: 300, max: 0, game: 'i', category:　'buff', tier: 1,
-          calcPrice: (base, n) => base + Math.pow(n,2)*100},
-        {id: 's_miss_plus', name: '神経衰弱 ミス上限+1', desc: '神経衰弱でミスしていい回数が1回増えます。',　basePrice: 300, max: 0, game: 's', category: 'buff', tier: 1,
-          calcPrice: (base, n) => base + (150 * n)},
-        {id: 'c', name: 'クリッカー トークン', desc: 'クリッカーゲームで強化に使えるトークン。',　basePrice: 500, max: 0, game: 'c', category: 'buff', tier: 1,
-          calcPrice: (base, n) => base}
-      ]
+          { id: 'l_plus', name: 'ラストウォー強化', desc: 'ラストウォーで最初の人が一人増えます。', basePrice: 300, max: 0, game: 'l', category: 'buff', tier: 1,
+            calcPrice: (base, n) => base + Math.pow(n, 2) * 100 },
+            
+          { id: 'i_bougai_ikkokesu', name: '妨害キャンセラー', desc: 'イライラ棒の妨害ギミックが1つ消えます。', basePrice: 300, max: 0, game: 'i', category: 'buff', tier: 1,
+            calcPrice: (base, n) => base + Math.pow(n, 2) * 100 },
+            
+          { id: 's_miss_plus', name: '神経衰弱 ミス上限+1', desc: '神経衰弱でミスしていい回数が1回増えます。', basePrice: 300, max: 0, game: 's', category: 'buff', tier: 1,
+            calcPrice: (base, n) => base + (150 * n) },
+            
+          { id: 'c', name: 'クリッカー トークン', desc: 'クリッカーゲームで強化に使えるトークン。', basePrice: 500, max: 0, game: 'c', category: 'buff', tier: 1,
+            calcPrice: (base, n) => base }
+        ]
 };
