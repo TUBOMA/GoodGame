@@ -67,24 +67,25 @@ const GameSystem = {
   },
 
   // ★変更：購入時に個数を +1 する処理に変更
-  tryPurchaseItem: function(itemId, actualPrice) {
-    const data = this._loadAll();
-    
-    // 過去の配列データ保護
-    if (Array.isArray(data.common.ownedItems)) data.common.ownedItems = {};
-
-    if (data.common.coins < actualPrice) return 'NO_COINS';
-
-    // 支払い
-    data.common.coins -= actualPrice;
-    
-    // 所持数を +1 する（初めて買う時は 0 + 1 になる）
-    data.common.ownedItems[itemId] = (data.common.ownedItems[itemId] || 0) + 1;
-    
-    this._saveAll(data);
-    this.updateUIDisplay();
-    return 'SUCCESS';
-  },
+    // main.js
+    tryPurchaseItem: function(itemId, price, num = 1) {
+      const data = this._loadAll();
+      
+      if (data.common.coins < price) {
+        return 'NO_COINS';
+      }
+      
+      data.common.coins -= price;
+      
+      if (!data.common.ownedItems[itemId]) {
+        data.common.ownedItems[itemId] = 0;
+      }
+      data.common.ownedItems[itemId] += num;
+      
+      this._saveAll(data);
+      // ★ ここの this._updateCoinUI(...) は不要なので削除しました ★
+      return 'SUCCESS';
+    },
 
     useItem: function(itemId, num = 1) { // ← ここがポイント！
       const data = this._loadAll();
