@@ -5,6 +5,11 @@ const scoreDisplay = document.getElementById('scoreDisplay');
 const missDisplay = document.getElementById('missDisplay');
 const highScoreDisplay = document.getElementById('highScoreDisplay');
 const messageDisplay = document.getElementById('message');
+const flipSound = new Audio('Sounds/カードをめくる.mp3');
+const matchSound = new Audio('Sounds/決定ボタンを押す33.mp3');
+const missSound = new Audio('Sounds/ビープ音4.mp3');
+const gameClearSound = new Audio('Sounds/成功音.mp3');
+const gameOverSound = new Audio('Sounds/データ表示3.mp3');
 const GAME_ID = 'sinnkeisuijyaku';
 
 let cardsFlipped = 0;
@@ -102,6 +107,8 @@ function flipCard(event) {
     if (card.classList.contains('flipped')) return;
 
     card.classList.add('flipped');
+    flipSound.currentTime = 0;
+    flipSound.play();
 
     if (!firstCard) {
         firstCard = card;
@@ -139,6 +146,8 @@ function matchCards() {
 
     messageDisplay.textContent = 'マッチ成功！';
     combos++;
+    matchSound.currentTime = 0;
+    matchSound.play();
 
     const baseScore = 100;
     const turnBonus = Math.max(0, 70 - turns * 5);
@@ -160,6 +169,8 @@ function unflipCards() {
         messageDisplay.textContent = '一致しませんでした';
 
         miss++;
+        missSound.currentTime = 0;
+        missSound.play();
         combos = 0;
         missDisplay.textContent = `ミス: ${miss}`;
 
@@ -179,6 +190,8 @@ function gameOver() {
     messageDisplay.textContent = `ゲームオーバー！スコア: ${scores}点！`;
     if (typeof GameSystem !== 'undefined') {
         GameSystem.addCoins(100); // 数字は一旦100統一で 調整は後々
+        gameOverSound.currentTime = 0;
+        gameOverSound.play();
     }
     gameEnd();
 }
@@ -187,6 +200,8 @@ function gameClear() {
     messageDisplay.textContent = `クリア！スコア: ${scores}点！`;
     if (typeof GameSystem !== 'undefined') {
         GameSystem.addCoins(200); // 数字は一旦100統一で 調整は後々
+        gameClearSound.currentTime = 0;
+        gameClearSound.play();
     }
     gameEnd();
 }
