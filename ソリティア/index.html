@@ -8,25 +8,34 @@
 </head>
 <body>
     <div class="container">
-        <h1>神経衰弱</h1>
-
-        <div class="status-row">
-            <div class="info">
-                <div id="highScoreDisplay">ベストスコア: -</div>
-                <div id="message">スタートボタンを押して開始</div>
+        <div class="layout">
+            <div class="side-nav">
+                <a href="../index.html" class="home-button">◀ ホームへ戻る</a>
             </div>
-            <div class="scores">
-                <div id="scoreDisplay">スコア: 0</div>
-                <div id="missDisplay">ミス: 0</div>
-            </div>
-        </div>
 
-        <div class="memory-game" id="gameBoard"></div>
+            <main class="game-column">
+                <h1>神経衰弱</h1>
 
-        <div class="button-group">
-            <button id="startButton">ゲームスタート</button>
-            <button id="resetButton" disabled>リセット</button>
-            <a href="../index.html" class="home-button">ホームに戻る</a>
+                <div class="status-row">
+                    <div class="info">
+                        <div id="highScoreDisplay">ベストスコア: -</div>
+                        <div id="message">スタートボタンを押して開始</div>
+                    </div>
+                    <div class="scores">
+                        <div id="scoreDisplay">スコア: 0</div>
+                        <div id="missDisplay">ミス: 0</div>
+                    </div>
+                </div>
+
+                <div class="memory-game" id="gameBoard"></div>
+
+                <div class="button-group">
+                    <button id="startButton">ゲームスタート</button>
+                    <button id="resetButton" disabled>リセット</button>
+                </div>
+            </main>
+
+            <div class="side-spacer"></div>
         </div>
     </div>
 
