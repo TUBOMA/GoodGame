@@ -90,7 +90,7 @@ class ProgressManager {
   }
 
   addPhaseReward(phaseIndex) {
-    GameSystem.addCoins(phaseIndex * 10 + 10);
+    GameSystem.addCoins(phaseIndex * 50 + 50);
   }
 
   saveClearResult(elapsedSeconds, playMode) {
@@ -109,7 +109,7 @@ class ProgressManager {
     this.unlockTimeAttack();
 
     if (typeof GameSystem !== "undefined" && typeof GameSystem.addCoins === "function") {
-      GameSystem.addCoins(100);
+      GameSystem.addCoins(500);
     }
 
     const data = this.loadGameData();

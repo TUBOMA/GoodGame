@@ -36,10 +36,15 @@ class RunnerScene extends Phaser.Scene {
 
   //左右移動とゲーム開始のキー入力を登録する
   createInput() {
+    this.timeAttackUnlockKeyT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
+    this.timeAttackUnlockKeyM = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M);
+
     this.input.keyboard.on("keydown-LEFT", (event) => this.handleLaneInput(Lane.Left, event));
     this.input.keyboard.on("keydown-A", (event) => this.handleLaneInput(Lane.Left, event));
     this.input.keyboard.on("keydown-RIGHT", (event) => this.handleLaneInput(Lane.Right, event));
     this.input.keyboard.on("keydown-D", (event) => this.handleLaneInput(Lane.Right, event));
+    this.input.keyboard.on("keydown-T", () => this.unlockTimeAttackBySecretKeys());
+    this.input.keyboard.on("keydown-M", () => this.unlockTimeAttackBySecretKeys());
     this.input.keyboard.on("keydown-SPACE", () => {
       if (this.gameState !== "playing") {
         this.startGame(this.playMode);
@@ -151,6 +156,22 @@ class RunnerScene extends Phaser.Scene {
     this.hudView.setModeMessage("");
     this.hudView.updateModeSelection(this.playMode, false);
     this.updateHud();
+  }
+
+  //ホーム画面で T と M を同時押しした時だけ、タイムアタックを解放する
+  unlockTimeAttackBySecretKeys() {
+    if (
+      this.gameState !== "ready" ||
+      this.progressManager.isTimeAttackUnlocked ||
+      !this.timeAttackUnlockKeyT.isDown ||
+      !this.timeAttackUnlockKeyM.isDown
+    ) {
+      return;
+    }
+
+    this.progressManager.unlockTimeAttack();
+    this.hudView.setModeMessage("タイムアタックモードを解放しました！");
+    this.hudView.updateModeSelection(this.playMode, false);
   }
 
   //プレイヤーを選んだレーンへ移動する

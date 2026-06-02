@@ -98,14 +98,6 @@ const Phases = [
     gateCount: 5,
     randomLevel: 4,
   },
-  {
-    name: "PHASE 5",
-    speed: 650,
-    fogAlpha: 0.18,
-    noiseCount: 3,
-    gateCount: 5,
-    randomLevel: 5,
-  },
 ];
 
 //ゲートを通った後の人数を計算する。マイナスゲートは負の数を足す形で扱う
