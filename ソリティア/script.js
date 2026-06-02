@@ -239,6 +239,11 @@ function gameOver() {
     if (typeof GameSystem !== 'undefined') {
         GameSystem.addCoins(100); // 数字は一旦100統一で 調整は後々
         addPlayCount();
+        if (cardsFlipped === 0) {
+            if(typeof GameSystem !== 'undefined') {
+                GameSystem.unlockAchievement('achieve_s_zero_pair');
+            }
+        }
         gameOverSound.currentTime = 0;
         gameOverSound.play();
     }
@@ -251,6 +256,11 @@ function gameClear() {
         GameSystem.addCoins(200); // 数字は一旦100統一で 調整は後々
         addPlayCount();
         addClearCount();
+        if (miss === 0) {
+            if(typeof GameSystem !== 'undefined') {
+                GameSystem.unlockAchievement('achieve_s_perfect');
+            }
+        }
         gameClearSound.currentTime = 0;
         gameClearSound.play();
     }
@@ -274,9 +284,24 @@ function gameEnd() {
             GameSystem.unlockAchievement('achieve_s_play_10');
         }
     }
+    if (playCount === 100) {
+        if(typeof GameSystem !== 'undefined') {
+            GameSystem.unlockAchievement('achieve_s_play_100');
+        }
+    }
     if (clearCount === 1) {
         if(typeof GameSystem !== 'undefined') {
             GameSystem.unlockAchievement('achieve_s_clear_1');
+        }
+    }
+    if (clearCount === 10) {
+        if(typeof GameSystem !== 'undefined') {
+            GameSystem.unlockAchievement('achieve_s_clear_10');
+        }
+    }
+    if (clearCount === 100) {
+        if(typeof GameSystem !== 'undefined') {
+            GameSystem.unlockAchievement('achieve_s_clear_100');
         }
     }
     if (scores > currentHighScore) {
