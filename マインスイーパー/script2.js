@@ -15,6 +15,14 @@ const coinEl = document.getElementById("coin");
 const enemyEl = document.getElementById("enemy"); // 敵画像
 
 
+const hitSound = new Audio("hit.mp3");
+hitSound.volume = 0.4;
+
+function getClickerToken() {
+  if (typeof GameSystem === "undefined") return 0;
+  return GameSystem.getItemCount("c");
+}
+
 // ===== 敵撃破 =====
 function defeatEnemy() {
 
@@ -75,30 +83,18 @@ let skills = {
 
 function upgradeSkill(skillName) {
 
-  let currentLv = skills[skillName];
+  const cost = 1;
 
-  // 必要コスト
-  let cost = 1;
-
-  if (skillSeeds < cost) {
-    alert("スキルの種が足りません！");
+  if (getClickerToken() < cost) {
+    alert("クリッカートークンが足りません！");
     return;
   }
 
-  // 消費
-  skillSeeds -= cost;
+  GameSystem.useItem("c", cost);
 
-  // 共通保存
-  if (typeof GameSystem !== 'undefined') {
-    GameSystem.skillSeeds = skillSeeds;
-  }
-
-  // レベルアップ
   skills[skillName]++;
 
-  // 効果適用
   applySkills();
-
   updateUI();
 }
 
@@ -114,7 +110,13 @@ function applySkills() {
 
 function doDamage() {
 
-  let damage = attack;
+  addCombo();
+
+  let damage = attack * getComboMultiplier();
+
+
+
+  playHitSound();
 
   // クリ率
   let critChance = skills.critSkill * 0.1;
@@ -160,13 +162,16 @@ document.getElementById("coinSkillBtn").onclick = () => {
   upgradeSkill("coinSkill");
 };
 
+
+function playHitSound() {
+  const sound = hitSound.cloneNode();
+  sound.volume = 0.4;
+  sound.play();
+}
+
 //ここを一番最後にする
 function updateUI() {
 
-  // 共通データから取得
-  if (typeof GameSystem !== 'undefined') {
-    skillSeeds = GameSystem.skillSeeds || 0;
-  }
 
   hpEl.textContent = hp + " / " + maxHp;
   hpBarEl.max = maxHp;
@@ -177,7 +182,8 @@ function updateUI() {
   coinEl.textContent = coin;
 
   // スキルUI
-  document.getElementById("seedCount").textContent = skillSeeds;
+  document.getElementById("seedCount").textContent =
+  getClickerToken();
 
   document.getElementById("attackSkillLv").textContent =
     skills.attackSkill;
@@ -191,6 +197,15 @@ function updateUI() {
   document.getElementById("coinSkillLv").textContent =
     skills.coinSkill;
 
+
+  document.getElementById("comboCount").textContent =
+    combo;
+  
+  document.getElementById("comboBar").value =
+    combo;
+
+  document.getElementById("comboMulti").textContent =
+    "x" + getComboMultiplier().toFixed(1);
 
     checkAchievements();
 }
@@ -253,6 +268,63 @@ function unlockAchievement(id) {
 
   showAchievementPopup(ach);
 }
+
+// =========================
+// 🔥 コンボシステム
+// =========================
+
+let combo = 0;
+
+const MAX_COMBO = 100;
+
+// 最後にクリックした時間
+let lastComboTime = Date.now();
+
+function getComboMultiplier() {
+
+  if (combo >= 100) return 5.0;
+  if (combo >= 80) return 4.0;
+  if (combo >= 60) return 3.0;
+  if (combo >= 40) return 2.5;
+  if (combo >= 20) return 2.0;
+  if (combo >= 10) return 1.5;
+
+  return 1.0;
+}
+
+function addCombo() {
+
+  combo += 2;
+
+  if (combo > MAX_COMBO) {
+    combo = MAX_COMBO;
+  }
+
+  lastComboTime = Date.now();
+
+  updateUI();
+}
+
+setInterval(() => {
+
+  const now = Date.now();
+
+  // 1秒クリックしてなかったら減少開始
+  if (now - lastComboTime > 1000) {
+
+    if (combo > 0) {
+
+      combo -= 1;
+
+      if (combo < 0) {
+        combo = 0;
+      }
+
+      updateUI();
+    }
+  }
+
+}, 100);
 
 // ポップアップ表示
 function showAchievementPopup(ach) {

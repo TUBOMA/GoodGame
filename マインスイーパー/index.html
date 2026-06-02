@@ -8,69 +8,169 @@
 </head>
 <body>
 
-<!-- ===== メイン ===== -->
 <div id="mainGame">
-  <!-- ホームに戻るボタン -->
-  <div style="text-align: left; margin: 10px;">
-    <a href="../index.html"><button class="btn-sub">◀ ホームに戻る</button></a>
+
+  <!-- =====================
+       ゲーム本体
+  ====================== -->
+  <div class="gameArea">
+
+    <!-- 戻る -->
+    <div class="topBar">
+      <a href="../index.html">
+        <button class="btn-sub">
+          ◀ ホームに戻る
+        </button>
+      </a>
+    </div>
+
+    <!-- タイトル -->
+    <h1 class="gameTitle">
+      クリッカーゲーム
+    </h1>
+
+    <!-- 敵 -->
+    <div id="enemyContainer">
+      <img
+        id="enemy"
+        src="Enemy.png"
+        alt="敵">
+    </div>
+
+    <!-- HP -->
+    <div class="hp-container">
+
+      <div class="sectionTitle">
+        ❤️ 敵HP
+      </div>
+
+      <div id="hp">
+        100 / 100
+      </div>
+
+      <progress
+        id="hpBar"
+        value="100"
+        max="100">
+      </progress>
+
+    </div>
+
+    <!-- コンボ -->
+    <div class="combo-container">
+
+      <div class="comboHeader">
+
+        <div>
+          🔥 COMBO :
+          <span id="comboCount">0</span>
+        </div>
+
+        <div>
+          ⚡
+          <span id="comboMulti">
+            x1.0
+          </span>
+        </div>
+
+      </div>
+
+      <progress
+        id="comboBar"
+        value="0"
+        max="100">
+      </progress>
+
+    </div>
+
+    <!-- 攻撃 -->
+    <button
+      id="attackBtn"
+      class="btn-main">
+
+      💥 攻撃
+
+    </button>
+
+    <!-- ステータス -->
+    <div class="status-container">
+
+      <div class="statusRow">
+        <span>⚔️ 攻撃力</span>
+        <span id="attack">1</span>
+      </div>
+
+      <div class="statusRow">
+        <span>🤖 自動攻撃</span>
+        <span id="auto">0</span>
+      </div>
+
+      <div class="statusRow">
+        <span>💰 コイン</span>
+        <span id="coin">0</span>
+      </div>
+
+    </div>
+
   </div>
 
-  <h1>クリッカーゲーム</h1>
+  <!-- =====================
+       スキル
+  ====================== -->
+  <div class="panel" id="skillPanel">
 
-  <!-- 敵のイラスト（画像）エリア -->
-  <div id="enemyContainer">
-    <!-- ⚠️ src="slime.png" を、用意した画像ファイル名や画像URLに書き換えてください -->
-    <img id="enemy" src="slime.png" alt="敵のイラスト">
+    <h2>🌱 スキル</h2>
+
+    <p>
+      🎫 クリッカートークン :
+      <span id="seedCount">0</span>
+    </p>
+
+    <div class="skillRow">
+      <span>
+        ⚔️ 攻撃強化
+        Lv.<span id="attackSkillLv">0</span>
+      </span>
+
+      <button id="attackSkillBtn">
+        強化
+      </button>
+    </div>
+
+    <div class="skillRow">
+      <span>
+        🤖 自動攻撃
+        Lv.<span id="autoSkillLv">0</span>
+      </span>
+
+      <button id="autoSkillBtn">
+        強化
+      </button>
+    </div>
+
+    <div class="skillRow">
+      <span>
+        💥 クリ率
+        Lv.<span id="critSkillLv">0</span>
+      </span>
+
+      <button id="critSkillBtn">
+        強化
+      </button>
+    </div>
+
+    <div class="skillRow">
+      <span>
+        💰 コイン倍率
+        Lv.<span id="coinSkillLv">0</span>
+      </span>
+
+      <button id="coinSkillBtn">
+        強化
+      </button>
+    </div>
+
   </div>
-
-  <!-- HPバー -->
-  <div class="hp-container">
-    <p>敵HP: <span id="hp"></span></p>
-    <progress id="hpBar" value="100" max="100"></progress>
-  </div>
-  
-  <button id="attackBtn" class="btn-main">💥 攻撃</button>
-
-  <!-- ステータス表示 -->
-  <div class="status-container">
-    <p>⚔️ 攻撃力: <span id="attack">1</span></p>
-    <p>🤖 自動攻撃: <span id="auto">0</span>/秒</p>
-    <p>💰 コイン: <span id="coin">0</span></p>
-  </div>
-
-</div>
-
-<!-- スキル -->
-<div class="panel" id="skillPanel">
-  <h2>🌱 スキル</h2>
-
-  <p>スキルの種: <span id="seedCount">0</span></p>
-
-  <!-- 攻撃力 -->
-  <div class="skillRow">
-    <span>⚔️ 攻撃強化 Lv.<span id="attackSkillLv">0</span></span>
-    <button id="attackSkillBtn">強化</button>
-  </div>
-
-  <!-- 自動攻撃 -->
-  <div class="skillRow">
-    <span>🤖 自動攻撃 Lv.<span id="autoSkillLv">0</span></span>
-    <button id="autoSkillBtn">強化</button>
-  </div>
-
-  <!-- クリティカル -->
-  <div class="skillRow">
-    <span>💥 クリ率 Lv.<span id="critSkillLv">0</span></span>
-    <button id="critSkillBtn">強化</button>
-  </div>
-
-  <!-- コイン倍率 -->
-<div class="skillRow">
-  <span>
-    💰 コイン倍率 Lv.<span id="coinSkillLv">0</span>
-  </span>
-  <button id="coinSkillBtn">強化</button>
-</div>
 
 </div>
 
