@@ -26,6 +26,10 @@ const pressedKeys = new Set();
 const playerSpeed = 210;
 const playerRadius = 11;
 const playerHitRadius = 10;
+// 実績用のカウント変数
+let playCount = 0;
+let clearCount = 0;
+let deathCountInRound = 0; // 1プレイ中のミス回数用
 
 // WASDと矢印キーを、同じ方向名に変換します。
 const keyMap = {
@@ -50,27 +54,39 @@ function loadGameData() {
   }
 }
 
-// --- 追加機能：セーブデータの保存 ---
-function saveirairabouResult(currentScore, isCleared) {
+// --- セーブデータの保存 ---
+function saveirairabouResult(currentScore, isCleared, isPlayed) {
   if (typeof GameSystem !== "undefined") {
     let myData = GameSystem.loadGameData('irairabou');
     
-    // データが空なら初期化、そうでない場合も項目が欠けていれば補完する
-    if (!myData || typeof myData.highScore === 'undefined') {
-      myData = { highScore: 9999, clearCount: 0 };
+    // データ初期化（必要に応じてキーを追加）
+    if (!myData) {
+      myData = { highScore: 9999, clearCount: 0, playCount: 0 };
     }
-    
-    // スコアの比較（myData.highScore は確実に存在するので安全）
-    if (currentScore < myData.highScore) {
-      myData.highScore = currentScore;
+
+    // プレイ回数の更新
+    if (isPlayed) {
+      myData.playCount = (myData.playCount || 0) + 1;
+      console.log("現在のプレイ回数:", myData.playCount);
+      // プレイ回数の実績判定
+      if (myData.playCount === 1) GameSystem.unlockAchievement('achieve_i_play_1');
+      if (myData.playCount === 10) GameSystem.unlockAchievement('achieve_i_play_10');
+      if (myData.playCount === 100) GameSystem.unlockAchievement('achieve_i_play_100');
     }
-    
+
     // クリア回数の更新
     if (isCleared) {
       myData.clearCount = (myData.clearCount || 0) + 1;
+      console.log("現在のクリア回数:", myData.clearCount);
+      // クリア回数の実績判定
+      if (myData.clearCount === 1) GameSystem.unlockAchievement('achieve_i_clear_1');
+      if (myData.clearCount === 10) GameSystem.unlockAchievement('achieve_i_clear_10');
+      if (myData.clearCount === 100) GameSystem.unlockAchievement('achieve_i_clear_100');
     }
     
-    // 保存
+    // ... スコア更新処理 ...
+    if (currentScore < myData.highScore) myData.highScore = currentScore;
+    
     GameSystem.saveGameData('irairabou', myData);
   }
 }
@@ -418,7 +434,8 @@ function updateScore(nextScore) {
 function resetRound() {
   isPlaying = false;
   isGameClear = false;
-  
+  deathCountInRound = 0; //実績 リセットする
+
   isTimerRunning = false;
   currentElapsedTime = 0;
   timeText.textContent = "0.00";
@@ -485,6 +502,14 @@ function hitObstacle(cursorRect) {
 // ミスした時の処理（タイマーをリセットしないよう修正）
 function failRound() {
 
+  deathCountInRound++; 
+  
+  // 10回以上で実績解除
+  if (deathCountInRound >= 10) {
+    if (typeof GameSystem !== 'undefined') {
+      GameSystem.unlockAchievement('achieve_i_death_10');
+    }
+  }
   // 効果音を再生 
   hitSound.currentTime = 0; // 連続で鳴らせるように再生位置を先頭に戻す
   hitSound.play();
@@ -505,6 +530,13 @@ function clearRound() {
   clearSound.currentTime = 0;
   clearSound.play().catch(e => console.log("再生失敗:", e));
 
+  // 【追加】音速のネズミ実績判定 (例: 5秒未満でクリア)
+  if (currentElapsedTime < 7.0) {
+    if (typeof GameSystem !== 'undefined') {
+      GameSystem.unlockAchievement('achieve_i_speedrun');
+    }
+  }
+
   isGameClear = true;
   isPlaying = false;
   isTimerRunning = false;
@@ -514,7 +546,7 @@ function clearRound() {
     bestTimeText.textContent = bestRecord.toFixed(2);
   }
 
-  saveirairabouResult(bestRecord, true);
+  saveirairabouResult(bestRecord, true, false);
 
   let addedScore = 1000;
   if (currentElapsedTime > 10) {
@@ -561,6 +593,8 @@ function updateGame(currentTime) {
     if (!isPlaying) {
       isPlaying = true;
       
+      saveirairabouResult(9999, false, true);
+
       if (!isTimerRunning) {
         isTimerRunning = true;
         startTime = currentTime;
