@@ -15,6 +15,9 @@ const coinEl = document.getElementById("coin");
 const enemyEl = document.getElementById("enemy"); // 敵画像
 
 
+const hitSound = new Audio("hit.mp3");
+hitSound.volume = 0.4;
+
 // ===== 敵撃破 =====
 function defeatEnemy() {
 
@@ -115,6 +118,10 @@ function applySkills() {
 function doDamage() {
 
   let damage = attack;
+
+  hitSound.currentTime = 0;
+  hitSound.play();
+
 
   // クリ率
   let critChance = skills.critSkill * 0.1;
