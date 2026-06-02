@@ -190,6 +190,89 @@ function updateUI() {
 
   document.getElementById("coinSkillLv").textContent =
     skills.coinSkill;
+
+
+    checkAchievements();
+}
+
+function addPlayCount() {
+  if (typeof GameSystem !== "undefined") {
+    GameSystem.playCount = (GameSystem.playCount || 0) + 1;
+  }
+}
+
+function checkAchievements() {
+
+  const playCount = (GameSystem?.playCount || 0);
+
+  // プレイ回数系
+  if (playCount >= 1) GameSystem.unlockAchievement("achieve_c_play_1");
+  if (playCount >= 10) GameSystem.unlockAchievement("achieve_c_play_10");
+  if (playCount >= 100) GameSystem.unlockAchievement("achieve_c_play_100");
+
+  // 攻撃力
+  if (attack >= 1) GameSystem.unlockAchievement("achieve_c_manual_10");
+  if (attack >= 100) GameSystem.unlockAchievement("achieve_c_manual_100");
+  if (attack >= 1000) GameSystem.unlockAchievement("achieve_c_manual_1000");
+
+  // 自動攻撃
+  if (auto >= 10) GameSystem.unlockAchievement("achieve_c_auto_10");
+  if (auto >= 100) GameSystem.unlockAchievement("achieve_c_auto_100");
+  if (auto >= 1000) GameSystem.unlockAchievement("achieve_c_auto_1000");
+}
+// =========================
+// 🏆 実績システム
+// =========================
+
+let unlockedAchievements = new Set();
+
+// 初期化（ロード）
+function loadAchievements() {
+  if (typeof GameSystem !== "undefined") {
+    const saved = GameSystem.achievements || [];
+    unlockedAchievements = new Set(saved);
+  }
+}
+
+// 保存
+function saveAchievements() {
+  if (typeof GameSystem !== "undefined") {
+    GameSystem.achievements = Array.from(unlockedAchievements);
+  }
+}
+
+// 実績解除処理
+function unlockAchievement(id) {
+  if (unlockedAchievements.has(id)) return;
+
+  unlockedAchievements.add(id);
+  saveAchievements();
+
+  const ach = GameMasterData.achievements.find(a => a.id === id);
+  if (!ach) return;
+
+  showAchievementPopup(ach);
+}
+
+// ポップアップ表示
+function showAchievementPopup(ach) {
+  const div = document.createElement("div");
+  div.className = "achievement-popup";
+  div.innerHTML = `
+    <div class="ach-title">🏆 ${ach.name}</div>
+    <div class="ach-desc">${ach.desc}</div>
+    <div class="ach-flavor">${ach.flavor}</div>
+  `;
+
+  document.body.appendChild(div);
+
+  setTimeout(() => {
+    div.classList.add("show");
+  }, 10);
+
+  setTimeout(() => {
+    div.remove();
+  }, 3000);
 }
 
 updateUI();
