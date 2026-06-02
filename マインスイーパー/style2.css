@@ -21,7 +21,7 @@ body {
   background:
     radial-gradient(circle at 20% 20%, rgba(255, 99, 71, 0.18), transparent 24rem),
     linear-gradient(135deg, #0f172a 0%, #1e293b 45%, #111827 100%);
-  
+
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -29,12 +29,14 @@ body {
 }
 
 /* ===================================
-   📦 アプリ全体
+   📦 アプリ全体（横レイアウトの基準）
 ====================================== */
-.app {
-  width: min(520px, 100%);
+#mainGame {
+  width: min(1000px, 100%);
   display: grid;
-  gap: 16px;
+  grid-template-columns: 2fr 1fr; /* 左：ゲーム / 右：スキル */
+  gap: 20px;
+  align-items: start;
 }
 
 /* ===================================
@@ -57,34 +59,6 @@ body {
   padding: 14px;
 }
 
-.hp-label {
-  margin-bottom: 8px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #86efac;
-  letter-spacing: 0.04em;
-}
-
-progress {
-  width: 100%;
-  height: 22px;
-  overflow: hidden;
-  border: none;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.08);
-  accent-color: #22c55e;
-}
-
-progress::-webkit-progress-bar {
-  background: rgba(255,255,255,0.08);
-  border-radius: 999px;
-}
-
-progress::-webkit-progress-value {
-  border-radius: 999px;
-  background: linear-gradient(90deg, #22c55e, #4ade80);
-}
-
 /* ===================================
    📊 ステータス枠
 ====================================== */
@@ -93,32 +67,13 @@ progress::-webkit-progress-value {
   text-align: left;
 }
 
-.status-title {
-  margin-bottom: 10px;
-  font-size: 1rem;
-  font-weight: 800;
-  color: #7dd3fc;
-}
-
-.status-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 0.95rem;
-}
-
-.status-value {
-  font-weight: 800;
-  color: #facc15;
-}
-
 /* ===================================
    👾 敵エリア
 ====================================== */
 #enemyContainer {
   display: grid;
   place-items: center;
-  min-height: 240px;
+  min-height: 260px;
   padding: 18px;
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,0.12);
@@ -130,7 +85,7 @@ progress::-webkit-progress-value {
 
 /* 敵画像 */
 #enemy {
-  width: min(180px, 55vw);
+  width: min(200px, 50vw);
   height: auto;
   cursor: pointer;
   filter: drop-shadow(0 0 22px rgba(248, 113, 113, 0.45));
@@ -150,17 +105,9 @@ progress::-webkit-progress-value {
    ✨ 待機アニメーション
 ====================================== */
 @keyframes float {
-  0% {
-    transform: translateY(0px) scale(1);
-  }
-
-  50% {
-    transform: translateY(-12px) scale(1.03, 0.97);
-  }
-
-  100% {
-    transform: translateY(0px) scale(1);
-  }
+  0% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-12px) scale(1.03, 0.97); }
+  100% { transform: translateY(0px) scale(1); }
 }
 
 /* ===================================
@@ -172,23 +119,10 @@ progress::-webkit-progress-value {
 }
 
 @keyframes hit {
-  0% {
-    transform: scale(1);
-    filter: brightness(1.8) sepia(1) hue-rotate(-45deg);
-  }
-
-  25% {
-    transform: scale(1.2, 0.8) translateX(-12px);
-  }
-
-  75% {
-    transform: scale(0.82, 1.18) translateX(12px);
-  }
-
-  100% {
-    transform: scale(1);
-    filter: none;
-  }
+  0% { transform: scale(1); filter: brightness(1.8) sepia(1) hue-rotate(-45deg); }
+  25% { transform: scale(1.2, 0.8) translateX(-12px); }
+  75% { transform: scale(0.82, 1.18) translateX(12px); }
+  100% { transform: scale(1); filter: none; }
 }
 
 /* ===================================
@@ -259,44 +193,99 @@ button:active {
 }
 
 /* ===================================
-   🔘 ボタン配置
+   🌱 スキルパネル（右側）
 ====================================== */
-.button-group {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+#skillPanel {
+  padding: 16px;
+  height: fit-content;
+}
+
+/* スキル行 */
+.skillRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-top: 12px;
+  padding: 10px;
+
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+}
+
+.skillRow button {
+  padding: 8px 12px;
+  font-size: 0.9rem;
 }
 
 /* ===================================
-   📱 スマホ対応
+   📱 スマホ対応（縦レイアウトに戻す）
+====================================== */
+@media (max-width: 768px) {
+  #mainGame {
+    grid-template-columns: 1fr; /* 縦1列 */
+  }
+}
+
+/* ===================================
+   📱 超小型スマホ
 ====================================== */
 @media (max-width: 480px) {
   body {
     padding: 12px 10px;
   }
 
-  .app {
-    gap: 12px;
-  }
-
   #enemyContainer {
     min-height: 200px;
-    padding: 14px;
   }
 
   #enemy {
     width: 140px;
   }
 
-  .button-group {
-    grid-template-columns: 1fr;
-  }
-
   button {
     width: 100%;
   }
+}
 
-  .status-container {
-    padding: 14px;
-  }
+/* =========================
+   🏆 実績ポップアップ
+========================= */
+.achievement-popup {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 260px;
+  padding: 12px 14px;
+
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid gold;
+  border-radius: 12px;
+
+  color: white;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+
+  transform: translateX(120%);
+  transition: transform 0.3s ease;
+  z-index: 9999;
+}
+
+.achievement-popup.show {
+  transform: translateX(0);
+}
+
+.ach-title {
+  font-weight: 800;
+  color: gold;
+  margin-bottom: 6px;
+}
+
+.ach-desc {
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.ach-flavor {
+  font-size: 0.75rem;
+  opacity: 0.7;
 }
