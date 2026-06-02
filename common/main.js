@@ -114,6 +114,33 @@ const GameSystem = {
     this._saveAll(data);
   },
     
+    // =========================================
+      // セーブデータの出力・引き継ぎ（Base64暗号化）
+      // =========================================
+      exportSaveData: function() {
+        const dataString = localStorage.getItem(SAVE_KEY);
+        if (!dataString) return "";
+        // 文字化けを防ぎつつ、解読不能なコード（Base64）に変換する
+        return btoa(unescape(encodeURIComponent(dataString)));
+      },
+
+      importSaveData: function(base64Str) {
+        try {
+          // 暗号化されたコードを元のデータ（JSON）に復元
+          const decodedStr = decodeURIComponent(escape(atob(base64Str)));
+          const parsed = JSON.parse(decodedStr);
+          
+          // 正しいセーブデータの形をしているかチェック
+          if (parsed && parsed.common) {
+            this._saveAll(parsed); // 鉄壁のセキュリティ関数を通して保存
+            return true;
+          }
+        } catch (e) {
+          console.error("不正なセーブコードです", e);
+        }
+        return false;
+      },
+    
   // =========================================
   // 実績判定も超シンプル
   // =========================================

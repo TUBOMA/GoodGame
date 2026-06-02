@@ -7,26 +7,19 @@
 </head>
 <body>
 
-    <!-- 上部のナビゲーションバー -->
-      <header class="navbar">
-        <div class="logo">GOOD GAME</div>
-        <div class="nav-right">
-          <div class="coin-display">所持コイン: <span id="ui-coin">0</span> C</div>
-          
-          <!-- ★追加：実績ボタン -->
-          <a href="./common/achievements/index.html" class="btn shop-btn" style="background-color: #3498db; margin-right: 10px;">🏆 実績</a>
-          
-          <a href="./common/shop/index.html" class="btn shop-btn">🛒 ショップ</a>
-        </div>
-      </header>
+  <header class="navbar">
+    <div class="logo">GOOD GAME</div>
+    <div class="nav-right">
+      <div class="coin-display">所持コイン: <span id="ui-coin">0</span> C</div>
+      
+      <a href="./common/achievements/index.html" class="btn shop-btn" style="background-color: #3498db; margin-right: 10px;">🏆 実績</a>
+      
+      <a href="./common/shop/index.html" class="btn shop-btn">🛒 ショップ</a>
+    </div>
+  </header>
 
   <main class="container">
     <h1 class="page-title">ゲームを選ぶ</h1>
-    <!--
-    <div id="secret-message" style="display: none; background: #ffeaa7; padding: 15px; text-align: center; border-radius: 8px; margin-bottom: 20px; font-weight: bold; color: #d35400;">
-      🎉 テスト用メッセージの購入ありがとうございます！この文字は購入者限定です！
-    </div>
-    -->
     
     <div class="game-grid">
       <a href="./イライラ棒/index.html" class="game-card">
@@ -37,7 +30,6 @@
       <a href="./マインスイーパー/index.html" class="game-card">
         <h2>クリッカーゲーム</h2>
         <p>一人遊びの王道</p>
-
       </a>
       
       <a href="./ラストウォー/index.html" class="game-card">
@@ -50,16 +42,15 @@
         <p>定番の思考型パズル</p>
       </a>
       
-      
       <a href="./test/index.html" class="game-card">
         <h2>動作テスト用</h2>
         <p>コインの追加テスト</p>
       </a>
-      
-    
     </div>
 
-    <div style="text-align: center; margin-top: 60px;">
+    <div style="text-align: center; margin-top: 60px; display: flex; justify-content: center; gap: 15px;">
+      <button id="btn-export-save" class="btn" style="background-color: #10b981; color: white;">📤 セーブコード出力</button>
+      <button id="btn-import-save" class="btn" style="background-color: #8b5cf6; color: white;">📥 データ引き継ぎ</button>
       <button id="btn-trigger-reset" class="btn back-btn" style="background-color: #7f8c8d;">データを初期化する</button>
     </div>
 
@@ -76,7 +67,7 @@
     </div>
   </div>
 
-  <script src="../master_data.js"></script>
+  <script src="./common/master_data.js"></script>
   <script src="./common/main.js"></script>
   <script src="./common/reset.js"></script>
   <script src="./common/home.js"></script>

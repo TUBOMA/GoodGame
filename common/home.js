@@ -9,3 +9,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+// --- セーブコードの出力 ---
+const btnExport = document.getElementById('btn-export-save');
+if (btnExport) {
+  btnExport.addEventListener('click', () => {
+    const code = GameSystem.exportSaveData();
+    if (code) {
+      // 画面にコードを表示してコピーさせる
+      prompt("あなたのセーブコードです。すべてコピーして大切に保管してください！", code);
+    } else {
+      alert("出力できるデータがありません。");
+    }
+  });
+}
+
+// --- セーブコードの読み込み ---
+const btnImport = document.getElementById('btn-import-save');
+if (btnImport) {
+  btnImport.addEventListener('click', () => {
+    const code = prompt("引き継ぎたいセーブコードを貼り付けてください:");
+    if (code) {
+      const isSuccess = GameSystem.importSaveData(code);
+      if (isSuccess) {
+        alert("データの引き継ぎに成功しました！画面を更新します。");
+        location.reload(); // 画面を再読み込みしてデータを反映
+      } else {
+        alert("エラー：無効なセーブコードです。");
+      }
+    }
+  });
+}
