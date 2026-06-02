@@ -19,6 +19,8 @@ let scores = 0;
 let combos = 0;
 let misslimit = 6;
 let BASE_MISS_LIMIT = 6;
+let playCount = 0;
+let clearCount = 0;
 let firstCard = null;
 let secondCard = null;
 let newRecordTimer = null;
@@ -190,6 +192,7 @@ function gameOver() {
     messageDisplay.textContent = `ゲームオーバー！スコア: ${scores}点！`;
     if (typeof GameSystem !== 'undefined') {
         GameSystem.addCoins(100); // 数字は一旦100統一で 調整は後々
+        playCount++;
         gameOverSound.currentTime = 0;
         gameOverSound.play();
     }
@@ -200,6 +203,8 @@ function gameClear() {
     messageDisplay.textContent = `クリア！スコア: ${scores}点！`;
     if (typeof GameSystem !== 'undefined') {
         GameSystem.addCoins(200); // 数字は一旦100統一で 調整は後々
+        playCount++;
+        clearCount++;
         gameClearSound.currentTime = 0;
         gameClearSound.play();
     }
@@ -213,6 +218,11 @@ function gameEnd() {
     startButton.textContent = 'もう一度プレイ';
 
     const currentHighScore = loadHighScore();
+    if (playCount === 1) {
+        if(typeof GameSystem !== 'undefined') {
+            GameSystem.unlockAchievement('achieve_s_play_1');
+        }
+    }
     if (scores > currentHighScore) {
         saveHighScore(scores);
         updateHighScoreDisplay(true);

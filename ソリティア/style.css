@@ -5,7 +5,7 @@
 body {
     margin: 0;
     min-height: 100vh;
-    padding: 32px 16px;
+    padding: 18px 16px;
     font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
     color: #f7fbff;
     background:
@@ -14,34 +14,62 @@ body {
 }
 
 .container {
-    width: min(720px, 100%);
+    width: min(1900px, calc(100vw - 32px));
+    min-height: calc(100vh - 36px);
     margin: 0 auto;
-    padding: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 8px;
-    background: rgba(2, 6, 23, 0.58);
+    padding: 20px 26px;
+    border-radius: 0 0 28px 28px;
+    background: rgba(15, 23, 42, 0.82);
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
     text-align: center;
 }
 
+.layout {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) minmax(560px, 760px) minmax(180px, 1fr);
+    gap: 26px;
+    align-items: start;
+    justify-content: center;
+}
+
+.side-nav,
+.side-spacer {
+    min-width: 0;
+}
+
+.side-nav {
+    display: flex;
+    justify-content: flex-start;
+    padding-top: 4px;
+}
+
+.game-column {
+    width: 100%;
+}
+
 h1 {
-    margin: 0 0 18px;
+    margin: 0 0 12px;
     color: #f7fbff;
-    font-size: clamp(1.7rem, 4vw, 2.5rem);
+    font-size: clamp(1.45rem, 2vw, 2rem);
     font-weight: 900;
     letter-spacing: 0;
 }
 
 .status-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 180px;
     align-items: stretch;
     gap: 14px;
-    margin-bottom: 18px;
+    width: min(100%, 62vh, 620px);
+    margin-right: auto;
+    margin-bottom: 16px;
+    margin-left: auto;
+
 }
 
 .info,
 .scores {
-    min-height: 74px;
+    min-height: 66px;
     border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 8px;
     background: rgba(15, 23, 42, 0.76);
@@ -49,14 +77,13 @@ h1 {
 }
 
 .info {
-    flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
     gap: 6px;
     min-width: 0;
-    padding: 12px 16px;
+    padding: 10px 16px;
     text-align: left;
 }
 
@@ -73,13 +100,12 @@ h1 {
 }
 
 .scores {
-    width: 140px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
     gap: 8px;
-    padding: 12px 16px;
+    padding: 10px 16px;
 }
 
 #missDisplay,
@@ -94,11 +120,11 @@ h1 {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(4, 1fr);
-    gap: 10px;
-    width: 100%;
+    gap: 8px;
+    width: min(100%, 62vh, 620px);
     aspect-ratio: 1 / 1;
     margin: 0 auto;
-    padding: 14px;
+    padding: 12px;
     border: 3px solid #38bdf8;
     border-radius: 8px;
     background:
@@ -137,7 +163,7 @@ h1 {
     border: 2px solid rgba(255, 255, 255, 0.82);
     border-radius: 8px;
     backface-visibility: hidden;
-    font-size: clamp(1.4rem, 5vw, 2.4rem);
+    font-size: clamp(1.15rem, 5vw, 2rem);
     font-weight: 900;
     box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08), 0 12px 24px rgba(0, 0, 0, 0.22);
 }
@@ -168,8 +194,11 @@ h1 {
     display: flex;
     justify-content: center;
     gap: 10px;
-    margin-top: 18px;
-    padding: 12px;
+    width: min(100%, 62vh, 620px);
+    margin-top: 16px;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 10px;
     border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 8px;
     background: rgba(15, 23, 42, 0.76);
@@ -215,6 +244,26 @@ h1 {
     transform: none;
 }
 
+@media (max-width: 1120px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+
+    .side-nav {
+        justify-content: center;
+        padding-top: 0;
+    }
+
+    .side-spacer {
+        display: none;
+    }
+
+    .game-column {
+        max-width: 760px;
+        margin: 0 auto;
+    }
+}
+
 @media (max-width: 760px) {
     body {
         padding: 18px 10px;
@@ -222,14 +271,14 @@ h1 {
 
     .container {
         padding: 14px;
+        border-radius: 0 0 18px 18px;
     }
 
     .status-row {
-        flex-direction: column;
+        grid-template-columns: 1fr;
     }
 
     .scores {
-        width: 100%;
         flex-direction: row;
         justify-content: space-between;
     }
