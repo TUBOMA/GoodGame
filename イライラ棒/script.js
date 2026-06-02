@@ -4,10 +4,16 @@ const startZone = document.getElementById("startZone");
 const goalZone = document.getElementById("goalZone");
 const cursor = document.getElementById("cursor");
 const scoreText = document.getElementById("score");
+const timeText = document.getElementById("time");
+const bestTimeText = document.getElementById("bestTime");
 const restartButton = document.getElementById("restartButton");
 
 // ゲーム全体の状態を保存する変数です。
 let score = 0;
+let startTime = 0;
+let currentElapsedTime = 0;
+let bestRecord = null;
+let isTimerRunning = false;
 let isPlaying = false;
 let isGameClear = false;
 let resizeTimer = 0;
@@ -17,7 +23,13 @@ let playerX = 0;
 let playerY = 0;
 let playerRect = null;
 const pressedKeys = new Set();
-const playerSpeed = 190;
+const playerSpeed = 210;
+const playerRadius = 11;
+const playerHitRadius = 10;
+// 実績用のカウント変数
+let playCount = 0;
+let clearCount = 0;
+let deathCountInRound = 0; // 1プレイ中のミス回数用
 
 // WASDと矢印キーを、同じ方向名に変換します。
 const keyMap = {
@@ -31,19 +43,85 @@ const keyMap = {
   arrowright: "right"
 };
 
+// --- 追加機能：セーブデータの読み込み ---
+function loadGameData() {
+  if (typeof GameSystem !== "undefined") {
+    let savedData = GameSystem.loadGameData('irairabou');
+    if (savedData && savedData.highScore && savedData.highScore < 9999) {
+      bestRecord = savedData.highScore;
+      bestTimeText.textContent = bestRecord.toFixed(2);
+    }
+  }
+}
+
+// --- セーブデータの保存 ---
+function saveirairabouResult(currentScore, isCleared, isPlayed) {
+  if (typeof GameSystem !== "undefined") {
+    let myData = GameSystem.loadGameData('irairabou');
+    
+    // データ初期化（必要に応じてキーを追加）
+    if (!myData) {
+      myData = { highScore: 9999, clearCount: 0, playCount: 0 };
+    }
+
+    // プレイ回数の更新
+    if (isPlayed) {
+      myData.playCount = (myData.playCount || 0) + 1;
+      console.log("現在のプレイ回数:", myData.playCount);
+      // プレイ回数の実績判定
+      if (myData.playCount === 1) GameSystem.unlockAchievement('achieve_i_play_1');
+      if (myData.playCount === 10) GameSystem.unlockAchievement('achieve_i_play_10');
+      if (myData.playCount === 100) GameSystem.unlockAchievement('achieve_i_play_100');
+    }
+
+    // クリア回数の更新
+    if (isCleared) {
+      myData.clearCount = (myData.clearCount || 0) + 1;
+      console.log("現在のクリア回数:", myData.clearCount);
+      // クリア回数の実績判定
+      if (myData.clearCount === 1) GameSystem.unlockAchievement('achieve_i_clear_1');
+      if (myData.clearCount === 10) GameSystem.unlockAchievement('achieve_i_clear_10');
+      if (myData.clearCount === 100) GameSystem.unlockAchievement('achieve_i_clear_100');
+    }
+    
+    // ... スコア更新処理 ...
+    if (currentScore < myData.highScore) myData.highScore = currentScore;
+    
+    GameSystem.saveGameData('irairabou', myData);
+  }
+}
+
 // GameSystemが読み込まれている時だけ、指定した数のコインを追加します。
 function gainCoins(amount) {
   if (typeof GameSystem !== "undefined") {
     GameSystem.addCoins(amount);
-    console.log(`テストゲーム内で ${amount} コイン獲得しました！`);
-  } else {
-    console.error("GameSystemが見つかりません。HTMLでの読み込み順を確認してください。");
   }
+}
+
+// 障害物を消すアイテムの所持数を取得します（安全性を強化）
+function getHazardRemovalCount() {
+  if (typeof GameSystem === "undefined") {
+    return 0;
+  }
+
+  if (typeof GameSystem.getItemCount === "function") {
+    return GameSystem.getItemCount("i_bougai_ikkokesu");
+  }
+
+  if (typeof GameSystem.hasItem === "function" && GameSystem.hasItem("i_bougai_ikkokesu")) {
+    return 1;
+  }
+
+  return 0;
 }
 
 function cellKey(column, row) {
   return `${column},${row}`;
 }
+
+// 効果音のインスタンスを作成
+const hitSound = new Audio('./sounds/ミス.mp3'); // ファイルパスは適宜調整してください
+const clearSound = new Audio('./sounds/クリア.mp3');
 
 // 配列の順番をランダムに入れ替えます。コースや障害物のランダム生成で使います。
 function shuffle(items) {
@@ -64,7 +142,6 @@ function addOpenCell(openCells, column, row, columns, rows) {
 }
 
 // 大きめのマスでランダムな一本道を作ります。
-// ここではまだ実際のゲーム画面の細かいマスには変換していません。
 function tryMakeCoarsePath(coarseColumns, coarseRows) {
   const goal = { column: coarseColumns - 1, row: coarseRows - 1 };
   const startCell = { column: 0, row: 0 };
@@ -129,7 +206,7 @@ function makeFallbackCoarsePath(coarseColumns, coarseRows) {
   return path;
 }
 
-// 大きめのマスで作った道を、実際のゲーム画面のマス位置に変換します。
+// 大きめのマスで道を、実際のゲーム画面のマス位置に変換します。
 function coarseToActual(cell, columns, rows) {
   return {
     column: Math.min(columns - 1, cell.column * 2),
@@ -167,42 +244,56 @@ function makeActualPath(coarsePath, columns, rows) {
   return path;
 }
 
-// 複数回ランダム生成して、できるだけ長い一本道を採用します。
+// 複数回ランダム生成して、長すぎない一本道を採用します。
 function makePath(columns, rows) {
   const coarseColumns = Math.ceil(columns / 2);
   const coarseRows = Math.ceil(rows / 2);
-  let bestPath = null;
+  let selectedPath = null;
+  const targetLength = Math.round((coarseColumns + coarseRows) * 1.9);
 
-  for (let attempt = 0; attempt < 180; attempt += 1) {
+  for (let attempt = 0; attempt < 160; attempt += 1) {
     const coarsePath = tryMakeCoarsePath(coarseColumns, coarseRows);
 
-    if (coarsePath && (!bestPath || coarsePath.length > bestPath.length)) {
-      bestPath = coarsePath;
+    if (!coarsePath) {
+      continue;
+    }
+
+    if (!selectedPath || Math.abs(coarsePath.length - targetLength) < Math.abs(selectedPath.length - targetLength)) {
+      selectedPath = coarsePath;
     }
   }
 
-  return makeActualPath(bestPath || makeFallbackCoarsePath(coarseColumns, coarseRows), columns, rows);
+  return makeActualPath(selectedPath || makeFallbackCoarsePath(coarseColumns, coarseRows), columns, rows);
 }
 
-// STARTやGOALを、対応するマスの中に配置します。
+// STARTやGOALを配置します。（枠サイズ拡大と中央配置）
+// STARTやGOALを配置します。（枠サイズ拡大と中央配置）
 function placeZone(zone, column, row, cellWidth, cellHeight, areaHeight) {
-  const padding = 6;
-  const width = Math.max(34, cellWidth - padding * 2);
-  const height = Math.max(34, cellHeight - padding * 2);
-  const left = column * cellWidth + padding;
-  const top = Math.min(
-    areaHeight - height - padding,
-    Math.max(padding, row * cellHeight + (cellHeight - height) / 2)
-  );
+  const padding = 8;
+  // 枠のサイズをセル幅に合わせて調整（最小48px）
+  const width = Math.max(48, cellWidth - padding * 2);
+  const height = Math.max(48, cellHeight - padding * 2);
+  
+  // マスの中央に配置するための計算
+  const left = column * cellWidth + (cellWidth - width) / 2;
+  const top = row * cellHeight + (cellHeight - height) / 2;
 
   zone.style.width = `${width}px`;
   zone.style.height = `${height}px`;
   zone.style.left = `${left}px`;
   zone.style.top = `${top}px`;
-  zone.style.fontSize = `${Math.max(0.58, Math.min(0.86, cellWidth / 82))}rem`;
+  
+ // 枠が小さいときは小さく、大きいときは最大1remまで拡大します
+ zone.style.fontSize = `${Math.min(0.75, width / 75)}rem`;
+  
+ // 文字を完璧に中央寄せするための設定を追加
+ zone.style.display = "flex";
+ zone.style.alignItems = "center";
+ zone.style.justifyContent = "center";
+ zone.style.textAlign = "center";
 }
 
-// コース全体を作り直します。道以外のマスには壁を置きます。
+// コース全体を作り直します。壁を置きます。
 function generateCourse() {
   const oldObstacles = gameArea.querySelectorAll(".wall, .hazard");
 
@@ -212,8 +303,8 @@ function generateCourse() {
 
   const areaWidth = gameArea.clientWidth;
   const areaHeight = gameArea.clientHeight;
-  const columns = areaWidth < 520 ? 8 : areaWidth < 720 ? 12 : 16;
-  const rows = areaHeight < 500 ? 9 : 11;
+  const columns = areaWidth < 420 ? 8 : 10;
+  const rows = areaHeight < 560 ? 10 : 12;
   const cellWidth = areaWidth / columns;
   const cellHeight = areaHeight / rows;
   const pathCells = makePath(columns, rows);
@@ -246,7 +337,6 @@ function generateCourse() {
   resetPlayerToStart();
 }
 
-// 指定した道のマスが横方向・縦方向・曲がり角のどれかを調べます。
 function getPathDirection(pathCells, index) {
   const previous = pathCells[index - 1];
   const next = pathCells[index + 1];
@@ -266,7 +356,6 @@ function getPathDirection(pathCells, index) {
   return "corner";
 }
 
-// 障害物を置いてよい「直線部分」かどうかを調べます。
 function isStraightPathCell(pathCells, index) {
   const previous = pathCells[index - 1];
   const current = pathCells[index];
@@ -285,7 +374,6 @@ function isStraightPathCell(pathCells, index) {
   );
 }
 
-// 障害物が隣同士に並ばないようにチェックします。
 function isNextToHazard(cell, selectedCells) {
   return selectedCells.some((selected) => {
     const columnDistance = Math.abs(cell.column - selected.column);
@@ -295,20 +383,22 @@ function isNextToHazard(cell, selectedCells) {
   });
 }
 
-// 道の直線部分にカッターを置きます。曲がり角と隣接配置は避けます。
 function addHazards(pathCells, cellWidth, cellHeight) {
+  const baseHazardCount = 6;
+  const hazardCount = Math.max(0, baseHazardCount - getHazardRemovalCount());
+
+  if (hazardCount === 0) return;
+
   const candidateCells = pathCells
     .map((cell, index) => ({ ...cell, index }))
     .slice(4, -4)
     .filter((cell) => isStraightPathCell(pathCells, cell.index));
-  const hazardCells = shuffle(candidateCells);
-  const hazardCount = Math.min(5, hazardCells.length, Math.max(2, Math.floor(pathCells.length / 8)));
-  const selectedHazards = [];
 
-  for (const cell of hazardCells) {
-    if (selectedHazards.length >= hazardCount) {
-      break;
-    }
+  const selectedHazards = [];
+  const shuffledCandidates = shuffle(candidateCells);
+
+  for (const cell of shuffledCandidates) {
+    if (selectedHazards.length >= hazardCount) break;
 
     if (!isNextToHazard(cell, selectedHazards)) {
       selectedHazards.push(cell);
@@ -316,7 +406,7 @@ function addHazards(pathCells, cellWidth, cellHeight) {
   }
 
   selectedHazards.forEach((cell, index) => {
-    const size = Math.max(22, Math.min(34, Math.min(cellWidth, cellHeight) * 0.44));
+    const size = Math.max(22, Math.min(32, Math.min(cellWidth, cellHeight) * 0.37));
     const hazard = document.createElement("div");
     const pathDirection = getPathDirection(pathCells, cell.index);
     const cutterDirection = pathDirection === "horizontal" ? "is-vertical" : "is-horizontal";
@@ -326,7 +416,7 @@ function addHazards(pathCells, cellWidth, cellHeight) {
     hazard.style.top = `${cell.row * cellHeight + (cellHeight - size) / 2}px`;
     hazard.style.width = `${size}px`;
     hazard.style.height = `${size}px`;
-    hazard.style.animationDuration = `${0.75 + index * 0.12 + Math.random() * 0.45}s`;
+    hazard.style.animationDuration = `${1.15 + index * 0.12 + Math.random() * 0.45}s`;
 
     const blade = document.createElement("div");
     blade.className = "cutter-blade";
@@ -335,66 +425,59 @@ function addHazards(pathCells, cellWidth, cellHeight) {
   });
 }
 
-// スコア表示を更新します。
 function updateScore(nextScore) {
   score = nextScore;
   scoreText.textContent = String(score);
 }
 
-// プレイ状態を初期状態に戻します。スコアはここでは変えません。
+// プレイ状態を初期状態に戻します。
 function resetRound() {
   isPlaying = false;
   isGameClear = false;
+  deathCountInRound = 0; //実績 リセットする
+
+  isTimerRunning = false;
+  currentElapsedTime = 0;
+  timeText.textContent = "0.00";
+
   pressedKeys.clear();
   gameArea.classList.remove("is-playing", "is-danger");
   cursor.style.display = "block";
 }
 
-// リスタートボタン用です。スコアを0にしてコースも作り直します。
 function restartGame() {
   updateScore(0);
   resetRound();
   generateCourse();
 }
 
-// 2つの四角形が重なっているかを判定します。
 function rectsOverlap(a, b) {
+  const margin = 3;
+
   return (
-    a.left < b.right &&
-    a.right > b.left &&
-    a.top < b.bottom &&
-    a.bottom > b.top
+    a.left < b.right - margin &&
+    a.right > b.left + margin &&
+    a.top < b.bottom - margin &&
+    a.bottom > b.top + margin
   );
 }
 
-// プレイヤーの当たり判定用の四角形を作ります。
-function getCursorRect(x, y) {
-  const radius = 9;
-  return {
-    left: x - radius,
-    right: x + radius,
-    top: y - radius,
-    bottom: y + radius
-  };
-}
-
-// プレイヤーの現在位置から当たり判定を更新します。
-function updatePlayerRect() {
-  playerRect = getCursorRect(playerX, playerY);
-}
-
-// プレイヤーを指定位置へ移動します。ゲームエリア外には出ないように制限します。
 function movePlayerTo(x, y) {
   const areaRect = gameArea.getBoundingClientRect();
-  playerX = Math.min(areaRect.right - 11, Math.max(areaRect.left + 11, x));
-  playerY = Math.min(areaRect.bottom - 11, Math.max(areaRect.top + 11, y));
-  updatePlayerRect();
+  playerX = Math.min(areaRect.right - playerRadius, Math.max(areaRect.left + playerRadius, x));
+  playerY = Math.min(areaRect.bottom - playerRadius, Math.max(areaRect.top + playerRadius, y));
+  
+  playerRect = {
+    left: playerX - playerHitRadius,
+    right: playerX + playerHitRadius,
+    top: playerY - playerHitRadius,
+    bottom: playerY + playerHitRadius
+  };
 
   cursor.style.left = `${playerX - areaRect.left}px`;
   cursor.style.top = `${playerY - areaRect.top}px`;
 }
 
-// プレイヤーをSTARTの中央に戻します。
 function resetPlayerToStart() {
   const startRect = startZone.getBoundingClientRect();
 
@@ -404,7 +487,6 @@ function resetPlayerToStart() {
   );
 }
 
-// 壁やカッターに触れているかを調べます。
 function hitObstacle(cursorRect) {
   const obstacles = document.querySelectorAll(".wall, .hazard");
 
@@ -417,9 +499,21 @@ function hitObstacle(cursorRect) {
   return false;
 }
 
-// ミスした時の処理です。STARTに戻して画面を少し揺らします。
+// ミスした時の処理（タイマーをリセットしないよう修正）
 function failRound() {
-  resetRound();
+
+  deathCountInRound++; 
+  
+  // 10回以上で実績解除
+  if (deathCountInRound >= 10) {
+    if (typeof GameSystem !== 'undefined') {
+      GameSystem.unlockAchievement('achieve_i_death_10');
+    }
+  }
+  // 効果音を再生 
+  hitSound.currentTime = 0; // 連続で鳴らせるように再生位置を先頭に戻す
+  hitSound.play();
+
   resetPlayerToStart();
   gameArea.classList.add("is-danger");
 
@@ -428,13 +522,40 @@ function failRound() {
   }, 260);
 }
 
-// ゴールした時の処理です。スコアを増やして次のコースを生成します。
+// ゴールした時の処理
 function clearRound() {
+
+  // クリア時の効果音を再生 
+  clearSound.pause();
+  clearSound.currentTime = 0;
+  clearSound.play().catch(e => console.log("再生失敗:", e));
+
+  // 【追加】音速のネズミ実績判定 (例: 5秒未満でクリア)
+  if (currentElapsedTime < 7.0) {
+    if (typeof GameSystem !== 'undefined') {
+      GameSystem.unlockAchievement('achieve_i_speedrun');
+    }
+  }
+
   isGameClear = true;
   isPlaying = false;
+  isTimerRunning = false;
+  
+  if (bestRecord === null || currentElapsedTime < bestRecord) {
+    bestRecord = currentElapsedTime;
+    bestTimeText.textContent = bestRecord.toFixed(2);
+  }
+
+  saveirairabouResult(bestRecord, true, false);
+
+  let addedScore = 1000;
+  if (currentElapsedTime > 10) {
+    addedScore = Math.max(0, Math.round(1000 - (currentElapsedTime - 10) * 10));
+  }
+
   pressedKeys.clear();
-  updateScore(score + 100);
-  gainCoins(100);
+  updateScore(score + addedScore);
+  gainCoins(addedScore);
 
   gameArea.classList.remove("is-playing");
 
@@ -446,7 +567,6 @@ function clearRound() {
 
 restartButton.addEventListener("click", restartGame);
 
-// 何か移動キーが押されているかを調べます。
 function hasMovementInput() {
   return (
     pressedKeys.has("up") ||
@@ -456,8 +576,7 @@ function hasMovementInput() {
   );
 }
 
-// 毎フレーム呼ばれるゲームのメイン処理です。
-// キー入力、移動、壁/障害物/ゴール判定をここで行います。
+// 毎フレーム呼ばれるゲームのメイン処理
 function updateGame(currentTime) {
   const deltaTime = Math.min(0.04, (currentTime - lastFrameTime) / 1000 || 0);
   lastFrameTime = currentTime;
@@ -465,25 +584,22 @@ function updateGame(currentTime) {
   let moveX = 0;
   let moveY = 0;
 
-  if (pressedKeys.has("up")) {
-    moveY -= 1;
-  }
-
-  if (pressedKeys.has("down")) {
-    moveY += 1;
-  }
-
-  if (pressedKeys.has("left")) {
-    moveX -= 1;
-  }
-
-  if (pressedKeys.has("right")) {
-    moveX += 1;
-  }
+  if (pressedKeys.has("up")) moveY -= 1;
+  if (pressedKeys.has("down")) moveY += 1;
+  if (pressedKeys.has("left")) moveX -= 1;
+  if (pressedKeys.has("right")) moveX += 1;
 
   if (!isGameClear && hasMovementInput()) {
     if (!isPlaying) {
       isPlaying = true;
+      
+      saveirairabouResult(9999, false, true);
+
+      if (!isTimerRunning) {
+        isTimerRunning = true;
+        startTime = currentTime;
+      }
+
       gameArea.classList.add("is-playing");
     }
 
@@ -492,6 +608,11 @@ function updateGame(currentTime) {
       playerX + (moveX / length) * playerSpeed * deltaTime,
       playerY + (moveY / length) * playerSpeed * deltaTime
     );
+  }
+
+  if (isTimerRunning) {
+    currentElapsedTime = (currentTime - startTime) / 1000;
+    timeText.textContent = currentElapsedTime.toFixed(2);
   }
 
   if (isPlaying && playerRect && hitObstacle(playerRect)) {
@@ -505,7 +626,6 @@ function updateGame(currentTime) {
   animationId = window.requestAnimationFrame(updateGame);
 }
 
-// キーを押した時、WASDまたは矢印キーなら移動状態として記録します。
 window.addEventListener("keydown", (event) => {
   const key = keyMap[event.key.toLowerCase()];
 
@@ -515,7 +635,6 @@ window.addEventListener("keydown", (event) => {
   }
 });
 
-// キーを離した時、移動状態から外します。
 window.addEventListener("keyup", (event) => {
   const key = keyMap[event.key.toLowerCase()];
 
@@ -524,7 +643,6 @@ window.addEventListener("keyup", (event) => {
   }
 });
 
-// 画面サイズが変わったら、マスの大きさも変わるのでコースを作り直します。
 window.addEventListener("resize", () => {
   window.clearTimeout(resizeTimer);
   resizeTimer = window.setTimeout(() => {
@@ -533,7 +651,7 @@ window.addEventListener("resize", () => {
   }, 180);
 });
 
-// 最初の準備です。コースを作り、ゲームループを開始します。
+loadGameData();
 resetRound();
 generateCourse();
 animationId = window.requestAnimationFrame(updateGame);

@@ -1,12 +1,12 @@
 // セーブデータを保存するたった1つのキー名
 const SAVE_KEY = 'good_game_save_data';
 
-// ★変更：ownedItems を []（配列）から {}（辞書・オブジェクト）に変更しました
+// ★変更：unlockedAchievements をやめ、旧来の achievements に統一！
 const DEFAULT_SAVE_DATA = {
   common: {
     coins: 0,
     ownedItems: {},
-    unlockedAchievements: [] // ★新規：解除済み実績のIDを入れる箱
+    achievements: [] // 解除済み実績のIDを入れる箱
   },
   games: {}
 };
@@ -17,8 +17,21 @@ const GameSystem = {
     return dataString ? JSON.parse(dataString) : JSON.parse(JSON.stringify(DEFAULT_SAVE_DATA));
   },
 
+  // =========================================
+  // データをセーブする（鉄壁のセキュリティ版）
+  // =========================================
   _saveAll: function(dataObj) {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(dataObj));
+    // ★ 余計な箱を弾くセキュリティは残しつつ、箱の名前を achievements に変更
+    const cleanData = {
+      common: {
+        coins: typeof dataObj.common?.coins === 'number' ? dataObj.common.coins : 0,
+        ownedItems: dataObj.common?.ownedItems || {},
+        achievements: dataObj.common?.achievements || []
+      },
+      games: dataObj.games || {} // 各ゲームの個別セーブデータエリア
+    };
+
+    localStorage.setItem(SAVE_KEY, JSON.stringify(cleanData));
   },
 
   getCoins: function() {
@@ -48,63 +61,47 @@ const GameSystem = {
     return true;
   },
 
-  // --- ★アイテム管理が個数対応に進化 ---
   getOwnedItems: function() {
     const items = this._loadAll().common.ownedItems;
-    // 過去の配列データが残っていたらバグを防ぐために空にする（リセット推奨）
     if (Array.isArray(items)) return {};
     return items || {};
   },
 
-  // ★新規：指定したアイテムを「何個」持っているか返す（0なら未所持）
   getItemCount: function(itemId) {
     return this.getOwnedItems()[itemId] || 0;
   },
 
-  // 1個以上持っていれば true
   hasItem: function(itemId) {
     return this.getItemCount(itemId) > 0;
   },
 
-  // ★変更：購入時に個数を +1 する処理に変更
-  tryPurchaseItem: function(itemId, actualPrice) {
+  tryPurchaseItem: function(itemId, price, num = 1) {
     const data = this._loadAll();
     
-    // 過去の配列データ保護
-    if (Array.isArray(data.common.ownedItems)) data.common.ownedItems = {};
-
-    if (data.common.coins < actualPrice) return 'NO_COINS';
-
-    // 支払い
-    data.common.coins -= actualPrice;
+    if (data.common.coins < price) {
+      return 'NO_COINS';
+    }
     
-    // 所持数を +1 する（初めて買う時は 0 + 1 になる）
-    data.common.ownedItems[itemId] = (data.common.ownedItems[itemId] || 0) + 1;
+    data.common.coins -= price;
+    
+    if (!data.common.ownedItems[itemId]) {
+      data.common.ownedItems[itemId] = 0;
+    }
+    data.common.ownedItems[itemId] += num;
     
     this._saveAll(data);
-    this.updateUIDisplay();
     return 'SUCCESS';
   },
-    
-    // GameSystem の中（hasItem や tryPurchaseItem の下あたり）に追加します
 
-      // ★新規：アイテムを1つ消費する（成功すれば true、持っていなければ false を返す）
-      useItem: function(itemId) {
-        const data = this._loadAll();
-        
-        // アイテムを持っていない、または0個以下の場合は失敗
-        if (!data.common.ownedItems[itemId] || data.common.ownedItems[itemId] <= 0) {
-          return false;
-        }
-
-        // 所持数を1減らす
-        data.common.ownedItems[itemId] -= 1;
-        this._saveAll(data);
-        
-        // ※もし消費アイテムを使った時に画面上のUI（所持数など）を更新したい場合は、
-        // ここに更新用の処理やイベントを飛ばすこともできます。
-        return true; // 消費成功！
-},
+  useItem: function(itemId, num = 1) {
+    const data = this._loadAll();
+    if (!data.common.ownedItems[itemId] || data.common.ownedItems[itemId] < num) {
+      return false;
+    }
+    data.common.ownedItems[itemId] -= num;
+    this._saveAll(data);
+    return true;
+  },
 
   loadGameData: function(gameId) {
     const data = this._loadAll();
@@ -117,73 +114,116 @@ const GameSystem = {
     this._saveAll(data);
   },
     
-    hasAchievement: function(achId) {
-        const data = this._loadAll();
-        const achs = data.common.unlockedAchievements || [];
-        return achs.includes(achId);
-      },
+  // =========================================
+  // 実績判定も超シンプル
+  // =========================================
+  hasAchievement: function(achId) {
+    const data = this._loadAll();
+    const achs = data.common.achievements || [];
+    return achs.includes(achId);
+  },
 
-      // 実績を解除する関数（各ゲームから呼び出される）
-      unlockAchievement: function(achId, achName) {
-        const data = this._loadAll();
-        
-        // 過去のセーブデータ対策（箱がなければ作る）
-        if (!data.common.unlockedAchievements) {
-          data.common.unlockedAchievements = [];
+  // =========================================
+  // 実績解除も素直に書くだけ
+  // =========================================
+  unlockAchievement: function(achId) {
+    const data = this._loadAll();
+    
+    if (!data.common.achievements) {
+      data.common.achievements = [];
+    }
+
+    if (data.common.achievements.includes(achId)) {
+      return false;
+    }
+
+    data.common.achievements.push(achId);
+    this._saveAll(data);
+
+    let achName = "謎の実績";
+    if (typeof GameMasterData !== 'undefined' && GameMasterData.achievements) {
+      const foundAch = GameMasterData.achievements.find(ach => ach.id === achId);
+      if (foundAch) achName = foundAch.name;
+    }
+
+    this._showAchievementToast(achName);
+    return true;
+  },
+
+  _showAchievementToast: function(achName) {
+    const toast = document.createElement('div');
+    toast.innerHTML = `<span style="font-size: 1.2rem; margin-right: 8px;">🏆</span> 実績解除: <strong style="color: #fde047;">${achName}</strong>`;
+    
+    Object.assign(toast.style, {
+      position: 'fixed',
+      bottom: '20px',
+      right: '20px',
+      background: 'rgba(15, 23, 42, 0.95)',
+      color: '#f7fbff',
+      border: '1px solid rgba(56, 189, 248, 0.5)',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.2)',
+      padding: '16px 24px',
+      borderRadius: '8px',
+      fontSize: '1rem',
+      fontWeight: 'bold',
+      zIndex: '99999',
+      transition: 'opacity 0.4s ease, transform 0.4s ease',
+      opacity: '0',
+      transform: 'translateY(20px)'
+    });
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    }, 10);
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(10px)';
+      
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
         }
+      }, 400);
+    }, 3500);
+  },
 
-        // すでに解除済みなら何もしない
-        if (data.common.unlockedAchievements.includes(achId)) {
-          return false;
-        }
+  showToast: function(message) {
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    
+    Object.assign(toast.style, {
+      position: 'fixed',
+      bottom: '20px',
+      right: '20px',
+      backgroundColor: '#f39c12',
+      color: 'white',
+      padding: '15px 25px',
+      borderRadius: '8px',
+      fontWeight: 'bold',
+      boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+      zIndex: '10000',
+      transition: 'opacity 0.5s, transform 0.5s',
+      opacity: '0',
+      transform: 'translateY(20px)'
+    });
 
-        // 解除リストに追加してセーブ
-        data.common.unlockedAchievements.push(achId);
-        this._saveAll(data);
+    document.body.appendChild(toast);
 
-        // 画面の右下にカッコいい通知を出す
-        this.showToast(`🏆 実績解除: ${achName}`);
-        console.log(`[実績] 「${achName}」を解除しました！`);
-        return true;
-      },
+    setTimeout(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    }, 10);
 
-      // 画面に一時的な通知（トースト）を出す機能
-      showToast: function(message) {
-        const toast = document.createElement('div');
-        toast.textContent = message;
-        
-        // CSSを書かなくてもJS側でデザインを当てる
-        Object.assign(toast.style, {
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          backgroundColor: '#f39c12',
-          color: 'white',
-          padding: '15px 25px',
-          borderRadius: '8px',
-          fontWeight: 'bold',
-          boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-          zIndex: '10000',
-          transition: 'opacity 0.5s, transform 0.5s',
-          opacity: '0',
-          transform: 'translateY(20px)'
-        });
-
-        document.body.appendChild(toast);
-
-        // ちょっと待ってからフワッと表示
-        setTimeout(() => {
-          toast.style.opacity = '1';
-          toast.style.transform = 'translateY(0)';
-        }, 10);
-
-        // 3秒後に消す
-        setTimeout(() => {
-          toast.style.opacity = '0';
-          toast.style.transform = 'translateY(20px)';
-          setTimeout(() => toast.remove(), 500);
-        }, 3000);
-      }
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(20px)';
+      setTimeout(() => toast.remove(), 500);
+    }, 3000);
+  }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
