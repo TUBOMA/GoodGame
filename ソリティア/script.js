@@ -65,6 +65,52 @@ function saveHighScore(newscore) {
     GameSystem.saveGameData(GAME_ID, myData);
 }
 
+function loadGameStats() {
+    if (typeof GameSystem === 'undefined') {
+        return {
+            highScore: 0,
+            playCount: 0,
+            clearCount: 0
+        };
+    }
+
+    const myData = GameSystem.loadGameData(GAME_ID);
+
+    return {
+        highScore: myData.highScore || 0,
+        playCount: myData.playCount || 0,
+        clearCount: myData.clearCount || 0
+    };
+}
+
+function saveGameStats(stats) {
+    if (typeof GameSystem === 'undefined') {
+        return;
+    }
+
+    const myData = GameSystem.loadGameData(GAME_ID);
+
+    myData.highScore = stats.highScore ?? myData.highScore ?? 0;
+    myData.playCount = stats.playCount ?? myData.playCount ?? 0;
+    myData.clearCount = stats.clearCount ?? myData.clearCount ?? 0;
+
+    GameSystem.saveGameData(GAME_ID, myData);
+}
+
+function addPlayCount() {
+    const stats = loadGameStats();
+    stats.playCount++;
+    playCount = stats.playCount;
+    saveGameStats(stats);
+}
+
+function addClearCount() {
+    const stats = loadGameStats();
+    stats.clearCount++;
+    clearCount = stats.clearCount;
+    saveGameStats(stats);
+}
+
 function generateAndShuffleCards() {
     let values = [];
     for (let i = 1; i <= 8; i++) {
@@ -192,7 +238,7 @@ function gameOver() {
     messageDisplay.textContent = `ゲームオーバー！スコア: ${scores}点！`;
     if (typeof GameSystem !== 'undefined') {
         GameSystem.addCoins(100); // 数字は一旦100統一で 調整は後々
-        playCount++;
+        addPlayCount();
         gameOverSound.currentTime = 0;
         gameOverSound.play();
     }
@@ -203,8 +249,8 @@ function gameClear() {
     messageDisplay.textContent = `クリア！スコア: ${scores}点！`;
     if (typeof GameSystem !== 'undefined') {
         GameSystem.addCoins(200); // 数字は一旦100統一で 調整は後々
-        playCount++;
-        clearCount++;
+        addPlayCount();
+        addClearCount();
         gameClearSound.currentTime = 0;
         gameClearSound.play();
     }
@@ -223,6 +269,16 @@ function gameEnd() {
             GameSystem.unlockAchievement('achieve_s_play_1');
         }
     }
+    if (playCount === 10) {
+        if(typeof GameSystem !== 'undefined') {
+            GameSystem.unlockAchievement('achieve_s_play_10');
+        }
+    }
+    if (clearCount === 1) {
+        if(typeof GameSystem !== 'undefined') {
+            GameSystem.unlockAchievement('achieve_s_clear_1');
+        }
+    }
     if (scores > currentHighScore) {
         saveHighScore(scores);
         updateHighScoreDisplay(true);
@@ -232,6 +288,10 @@ function gameEnd() {
 }
 
 function initializeGame() {
+    const stats = loadGameStats();
+    playCount = stats.playCount;
+    clearCount = stats.clearCount;
+
     updateHighScoreDisplay();
 
     const initialValues = generateAndShuffleCards();
