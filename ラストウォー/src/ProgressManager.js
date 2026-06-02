@@ -14,15 +14,21 @@ class ProgressManager {
   }
 
   getStartPopulation() {
+    return Start_Population;
+  }
+
+  getSpeedMultiplier() {
     if (
       typeof GameSystem !== "undefined" &&
       typeof GameSystem.hasItem === "function" &&
-      GameSystem.hasItem(Start_Plus_Item_Id)
+      typeof GameSystem.getItemCount === "function" &&
+      GameSystem.hasItem(Speed_Down_Item_Id)
     ) {
-      return Start_Population + GameSystem.getItemCount(Start_Plus_Item_Id);
+      const itemCount = Math.max(0, Number(GameSystem.getItemCount(Speed_Down_Item_Id)) || 0);
+      return Math.max(Minimum_Speed_Multiplier, 1 - itemCount * Speed_Down_Per_Item);
     }
 
-    return Start_Population;
+    return 1;
   }
 
   getBestTime(playMode) {

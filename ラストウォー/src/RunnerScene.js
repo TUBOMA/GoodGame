@@ -74,8 +74,12 @@ class RunnerScene extends Phaser.Scene {
     this.gameState = "playing";
     this.playMode = playMode || Play_Mode.Normal;
     //ゲーム開始時に、今回のプレイで使う全フェーズの数字を先に作る
-    //ステージ生成はアイテムで増えた人数を考えず、基本の Start_Population で作る
-    this.playPhases = Create_Random_Phases();
+    //ステージ生成は基本の Start_Population で作り、強化は速度だけに反映する
+    const speedMultiplier = this.progressManager.getSpeedMultiplier();
+    this.playPhases = Create_Random_Phases().map((phase) => ({
+      ...phase,
+      speed: Math.round(phase.speed * speedMultiplier),
+    }));
     this.population = this.progressManager.getStartPopulation();
     this.progressManager.recordPlay(this.population);
     this.phaseIndex = 0;

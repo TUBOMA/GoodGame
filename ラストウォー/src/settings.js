@@ -31,7 +31,9 @@ const Best_Time_Key = "simpleGateRunnerBestTime";
 const Time_Attack_Unlocked_Key = "simpleGateRunnerTimeAttackUnlocked";
 const Time_Attack_Best_Time_Key = "simpleGateRunnerTimeAttackBestTime";
 const Game_System_Id = "lastwar";
-const Start_Plus_Item_Id = "l_plus";
+const Speed_Down_Item_Id = "l_plus";
+const Speed_Down_Per_Item = 0.1;
+const Minimum_Speed_Multiplier = 0.1;
 
 // 入力・移動で使うレーン名
 const Lane = {
