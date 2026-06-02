@@ -300,3 +300,27 @@ button:active {
     padding: 14px;
   }
 }
+
+/* =========================
+   🌱 スキル
+========================= */
+#skillPanel {
+  padding: 16px;
+}
+
+.skillRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-top: 12px;
+  padding: 10px;
+
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+}
+
+.skillRow button {
+  padding: 8px 12px;
+  font-size: 0.9rem;
+}
