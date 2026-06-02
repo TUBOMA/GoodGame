@@ -150,46 +150,65 @@ const GameSystem = {
     return true;
   },
 
-  _showAchievementToast: function(achName) {
-    const toast = document.createElement('div');
-    toast.innerHTML = `<span style="font-size: 1.2rem; margin-right: 8px;">🏆</span> 実績解除: <strong style="color: #fde047;">${achName}</strong>`;
-    
-    Object.assign(toast.style, {
-      position: 'fixed',
-      bottom: '20px',
-      right: '20px',
-      background: 'rgba(15, 23, 42, 0.95)',
-      color: '#f7fbff',
-      border: '1px solid rgba(56, 189, 248, 0.5)',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.2)',
-      padding: '16px 24px',
-      borderRadius: '8px',
-      fontSize: '1rem',
-      fontWeight: 'bold',
-      zIndex: '99999',
-      transition: 'opacity 0.4s ease, transform 0.4s ease',
-      opacity: '0',
-      transform: 'translateY(20px)'
-    });
-
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateY(0)';
-    }, 10);
-
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateY(10px)';
-      
-      setTimeout(() => {
-        if (toast.parentNode) {
-          toast.parentNode.removeChild(toast);
+    _showAchievementToast: function(achName) {
+        // ★ 1. 通知を縦に並べるための「透明な箱」を画面上に探す（無ければ作る）
+        let container = document.getElementById('toast-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'toast-container';
+          Object.assign(container.style, {
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            display: 'flex',
+            flexDirection: 'column-reverse', // 下から上に向かって積み上げる
+            gap: '12px',                     // 通知同士のスキマ
+            zIndex: '99999',
+            pointerEvents: 'none'            // 箱自体がマウスクリックを邪魔しないようにする
+          });
+          document.body.appendChild(container);
         }
-      }, 400);
-    }, 3500);
-  },
+
+        // ★ 2. 通知本体を作る
+        const toast = document.createElement('div');
+        toast.innerHTML = `<span style="font-size: 1.2rem; margin-right: 8px;">🏆</span> 実績解除: <strong style="color: #fde047;">${achName}</strong>`;
+        
+        // （元の position: fixed や bottom, right は箱に任せるので削除）
+        Object.assign(toast.style, {
+          background: 'rgba(15, 23, 42, 0.95)',
+          color: '#f7fbff',
+          border: '1px solid rgba(56, 189, 248, 0.5)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.2)',
+          padding: '16px 24px',
+          borderRadius: '8px',
+          fontSize: '1rem',
+          fontWeight: 'bold',
+          transition: 'opacity 0.4s ease, transform 0.4s ease',
+          opacity: '0',
+          transform: 'translateX(50px)' // ★ 右からスライドインさせるための初期位置
+        });
+
+        // bodyではなく、用意した箱(container)の中に追加する
+        container.appendChild(toast);
+
+        // 追加直後にアニメーション開始（右からスッと入ってくる）
+        setTimeout(() => {
+          toast.style.opacity = '1';
+          toast.style.transform = 'translateX(0)';
+        }, 10);
+
+        // 3.5秒後に消すアニメーション
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateX(50px)'; // 右へスッと帰っていく
+          
+          setTimeout(() => {
+            if (toast.parentNode) {
+              toast.parentNode.removeChild(toast);
+            }
+          }, 400);
+        }, 3500);
+      },
 
   showToast: function(message) {
     const toast = document.createElement('div');
