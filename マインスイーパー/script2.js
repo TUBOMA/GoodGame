@@ -18,6 +18,11 @@ const enemyEl = document.getElementById("enemy"); // 敵画像
 const hitSound = new Audio("hit.mp3");
 hitSound.volume = 0.4;
 
+function getClickerToken() {
+  if (typeof GameSystem === "undefined") return 0;
+  return GameSystem.getItemCount("c");
+}
+
 // ===== 敵撃破 =====
 function defeatEnemy() {
 
@@ -78,30 +83,18 @@ let skills = {
 
 function upgradeSkill(skillName) {
 
-  let currentLv = skills[skillName];
+  const cost = 1;
 
-  // 必要コスト
-  let cost = 1;
-
-  if (skillSeeds < cost) {
-    alert("スキルの種が足りません！");
+  if (getClickerToken() < cost) {
+    alert("クリッカートークンが足りません！");
     return;
   }
 
-  // 消費
-  skillSeeds -= cost;
+  GameSystem.useItem("c", cost);
 
-  // 共通保存
-  if (typeof GameSystem !== 'undefined') {
-    GameSystem.skillSeeds = skillSeeds;
-  }
-
-  // レベルアップ
   skills[skillName]++;
 
-  // 効果適用
   applySkills();
-
   updateUI();
 }
 
@@ -119,9 +112,9 @@ function doDamage() {
 
   let damage = attack;
 
-  hitSound.currentTime = 0;
-  hitSound.play();
 
+
+  playHitSound();
 
   // クリ率
   let critChance = skills.critSkill * 0.1;
@@ -167,13 +160,16 @@ document.getElementById("coinSkillBtn").onclick = () => {
   upgradeSkill("coinSkill");
 };
 
+
+function playHitSound() {
+  const sound = hitSound.cloneNode();
+  sound.volume = 0.4;
+  sound.play();
+}
+
 //ここを一番最後にする
 function updateUI() {
 
-  // 共通データから取得
-  if (typeof GameSystem !== 'undefined') {
-    skillSeeds = GameSystem.skillSeeds || 0;
-  }
 
   hpEl.textContent = hp + " / " + maxHp;
   hpBarEl.max = maxHp;
@@ -184,7 +180,8 @@ function updateUI() {
   coinEl.textContent = coin;
 
   // スキルUI
-  document.getElementById("seedCount").textContent = skillSeeds;
+  document.getElementById("seedCount").textContent =
+  getClickerToken();
 
   document.getElementById("attackSkillLv").textContent =
     skills.attackSkill;
