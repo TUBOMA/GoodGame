@@ -165,12 +165,25 @@ a {
   font-weight: 800;
 }
 
+/* 値段の文字は元の設定に戻す */
 .shop-item .price {
   font-size: 20px;
   font-weight: 800;
-  color: #fca5a5; /* 赤っぽいアクセント */
+  color: #fca5a5;
   text-align: right;
   margin: 15px 0 10px;
+}
+
+/* ★カード本体の設定をここに追加する★ */
+.shop-item {
+  display: flex;
+  flex-direction: column;
+  min-height: 280px; /* カードの最低限の高さを確保 */
+}
+
+/* 上のテキストエリアに余白をすべて吸収させる */
+.shop-item .item-info {
+  flex-grow: 1;
 }
 
 /* =========================================

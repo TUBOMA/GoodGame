@@ -54,14 +54,23 @@ function loadGameData() {
 function saveirairabouResult(currentScore, isCleared) {
   if (typeof GameSystem !== "undefined") {
     let myData = GameSystem.loadGameData('irairabou');
-    if (!myData) { myData = { highScore: 9999, clearCount: 0 }; }
     
+    // データが空なら初期化、そうでない場合も項目が欠けていれば補完する
+    if (!myData || typeof myData.highScore === 'undefined') {
+      myData = { highScore: 9999, clearCount: 0 };
+    }
+    
+    // スコアの比較（myData.highScore は確実に存在するので安全）
     if (currentScore < myData.highScore) {
       myData.highScore = currentScore;
     }
+    
+    // クリア回数の更新
     if (isCleared) {
       myData.clearCount = (myData.clearCount || 0) + 1;
     }
+    
+    // 保存
     GameSystem.saveGameData('irairabou', myData);
   }
 }
@@ -93,6 +102,10 @@ function getHazardRemovalCount() {
 function cellKey(column, row) {
   return `${column},${row}`;
 }
+
+// 効果音のインスタンスを作成
+const hitSound = new Audio('./sounds/ミス.mp3'); // ファイルパスは適宜調整してください
+const clearSound = new Audio('./sounds/クリア.mp3');
 
 // 配列の順番をランダムに入れ替えます。コースや障害物のランダム生成で使います。
 function shuffle(items) {
@@ -471,6 +484,11 @@ function hitObstacle(cursorRect) {
 
 // ミスした時の処理（タイマーをリセットしないよう修正）
 function failRound() {
+
+  // 効果音を再生 
+  hitSound.currentTime = 0; // 連続で鳴らせるように再生位置を先頭に戻す
+  hitSound.play();
+
   resetPlayerToStart();
   gameArea.classList.add("is-danger");
 
@@ -481,6 +499,12 @@ function failRound() {
 
 // ゴールした時の処理
 function clearRound() {
+
+  // クリア時の効果音を再生 
+  clearSound.pause();
+  clearSound.currentTime = 0;
+  clearSound.play().catch(e => console.log("再生失敗:", e));
+
   isGameClear = true;
   isPlaying = false;
   isTimerRunning = false;
