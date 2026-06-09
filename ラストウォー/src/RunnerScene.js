@@ -94,7 +94,7 @@ class RunnerScene extends Phaser.Scene {
       speed: Math.round(phase.speed * speedMultiplier),
     }));
     this.population = this.progressManager.getStartPopulation();
-    this.progressManager.recordPlay(this.population);
+    this.progressManager.recordPlay();
     this.phaseIndex = 0;
     this.currentGatePairIndex = 0;
     this.elapsedSeconds = 0;

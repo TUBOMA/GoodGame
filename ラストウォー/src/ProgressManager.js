@@ -36,8 +36,8 @@ class ProgressManager {
     return playMode === Play_Mode.Time_Attack ? this.timeAttackBestTime : this.bestTime;
   }
 
-  //ゲームを開始した時に、プレイ回数と初期人数の実績を確認する
-  recordPlay(initialPopulation) {
+  //ゲームを開始した時に、プレイ回数の実績を確認する
+  recordPlay() {
     const data = this.loadGameData();
 
     if (!data) {
@@ -51,10 +51,6 @@ class ProgressManager {
       { count: 10, id: "achieve_l_play_10" },
       { count: 100, id: "achieve_l_play_100" },
     ]);
-
-    if (initialPopulation >= 10) {
-      this.unlockOnce("achieve_l_initial_10");
-    }
   }
 
   //ゲーム終了時の回数記録と、クリア時の報酬・ベストタイムを保存する
