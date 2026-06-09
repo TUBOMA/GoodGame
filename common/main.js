@@ -108,11 +108,34 @@ const GameSystem = {
     return data.games[gameId] || {};
   },
 
-  saveGameData: function(gameId, gameDataObj) {
-    const data = this._loadAll();
-    data.games[gameId] = gameDataObj;
-    this._saveAll(data);
-  },
+    saveGameData: function(gameId, gameDataObj) {
+        const data = this._loadAll();
+        data.games[gameId] = gameDataObj;
+        this._saveAll(data);
+        
+        // ★追加：データがセーブされた瞬間に、裏で全ゲーム合計プレイ回数を自動チェック！
+        this._checkTotalPlayAchievements();
+      },
+
+      // ★追加：全ゲームの合計プレイ回数を計算して実績解除する専用関数
+      _checkTotalPlayAchievements: function() {
+        const data = this._loadAll();
+        let totalPlayCount = 0;
+
+        if (data && data.games) {
+          for (const id in data.games) {
+            if (data.games[id].playCount) {
+              totalPlayCount += data.games[id].playCount;
+            }
+          }
+        }
+
+        // 解除済みなら何もしない安全設計なので、毎回呼ばれても一瞬で終わります
+        if (totalPlayCount >= 1) this.unlockAchievement("achieve_all_play_1");
+        if (totalPlayCount >= 10) this.unlockAchievement("achieve_all_play_10");
+        if (totalPlayCount >= 100) this.unlockAchievement("achieve_all_play_100");
+        if (totalPlayCount >= 1000) this.unlockAchievement("achieve_all_play_1000");
+      },
     
     // =========================================
       // セーブデータの出力・引き継ぎ（Base64暗号化）

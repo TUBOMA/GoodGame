@@ -24,7 +24,8 @@ function updateItemUI(card, btnOne, btnTen, ownedDiv, item) {
   
   // ★ 枠外にある所持数テキストを更新
   if (ownedDiv) {
-    ownedDiv.textContent = `所持数: ${currentQuan}個`;
+    let maxText = item.max !== -1 ? ` / 最大${item.max}個` : '';
+    ownedDiv.textContent = `所持数: ${currentQuan}個${maxText}`;
   }
 
   const priceDiv = card.querySelector('.price');
@@ -34,23 +35,26 @@ function updateItemUI(card, btnOne, btnTen, ownedDiv, item) {
   
   // ▼ 1個購入ボタンの制御 ▼
   btnOne.textContent = "1個購入";
-  if (item.max > 0 && currentQuan >= item.max) {
+  if (item.max !== -1 && currentQuan >= item.max) {
     btnOne.textContent = "SOLD OUT";
     btnOne.disabled = true;
     btnOne.classList.add('sold-out');
-    if (priceDiv) priceDiv.innerHTML = "-";
+    if (priceDiv) priceDiv.innerHTML = "<b style='color: #ef4444; font-size: 1.1rem;'>売り切れ！</b>";
   } else {
     btnOne.disabled = false;
     btnOne.classList.remove('sold-out');
   }
 
   // ▼ 10個購入ボタンの制御 ▼
-  if (item.max > 0 && item.max < 10) {
+  if (item.max !== -1 && item.max < 10) {
+    // 上限がそもそも10個未満のアイテムは、10個買いボタンを完全に消す
     btnTen.style.display = 'none';
-  } else if (item.max > 0 && currentQuan + 10 > item.max) {
+  } else if (item.max !== -1 && currentQuan + 10 > item.max) {
+    // 10個買うと上限をオーバーしてしまう場合
     btnTen.textContent = "上限超過";
     btnTen.disabled = true;
     btnTen.classList.add('sold-out');
+    btnTen.style.display = 'block';
   } else {
     btnTen.textContent = "10個購入";
     btnTen.disabled = false;
@@ -62,7 +66,9 @@ function updateItemUI(card, btnOne, btnTen, ownedDiv, item) {
 // --- 購入処理の共通化 ---
 function handlePurchase(item, amount, clickedBtn, card, ownedDiv) {
   const currentQuan = GameSystem.getItemCount(item.id);
-  if (item.max > 0 && currentQuan + amount > item.max) return;
+  
+  // ★ 購入時に上限を超えないか最終チェック
+  if (item.max !== -1 && currentQuan + amount > item.max) return;
 
   const actualPrice = getBulkPrice(item, currentQuan, amount);
   const status = GameSystem.tryPurchaseItem(item.id, actualPrice, amount);
@@ -87,6 +93,18 @@ function handlePurchase(item, amount, clickedBtn, card, ownedDiv) {
       const latestData = GameSystem._loadAll();
       coinDisplay.textContent = latestData.common.coins;
     }
+    
+    // 【オプション】実績判定を呼ぶ（「アイテムを10回買う」などの実績のため）
+    if (typeof GameSystem.unlockAchievement === 'function') {
+      let totalBought = 0;
+      const items = GameSystem.getOwnedItems();
+      for (const key in items) {
+        totalBought += items[key];
+      }
+      if (totalBought >= 1) GameSystem.unlockAchievement('achieve_shop_buy_1');
+      if (totalBought >= 10) GameSystem.unlockAchievement('achieve_shop_buy_10');
+      if (totalBought >= 100) GameSystem.unlockAchievement('achieve_shop_buy_100');
+    }
   }
 }
 
@@ -97,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. ラッパー（外箱）
     const wrapper = document.createElement('div');
     wrapper.className = 'shop-item-wrapper';
-    // ★追加: グリッドの中で高さを100%にする命令
     wrapper.style.height = '100%';
     wrapper.style.display = 'flex';
     wrapper.style.flexDirection = 'column';
@@ -106,7 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const card = document.createElement('div');
     card.className = 'shop-item';
     card.dataset.id = item.id;
-    // ★追加: ラッパーの中でカード本体を限界まで引き伸ばす命令
     card.style.flexGrow = '1';
     
     card.innerHTML = `
@@ -132,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
       color: 'rgba(247, 251, 255, 0.45)',
       textAlign: 'right',
       paddingRight: '4px',
-      marginTop: '6px', // 枠と文字の隙間
+      marginTop: '6px',
       fontWeight: '700',
       letterSpacing: '0.5px'
     });

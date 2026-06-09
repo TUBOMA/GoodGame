@@ -21,7 +21,6 @@ const GameMasterData = {
       { id: 'achieve_c_auto_1000', name: '宇宙規模の自動化', desc: 'クリッカーで自動攻撃力1000', flavor: '単位がインフレしすぎてよくわからなくなってきた。', game: 'c', category: 'atk_a', tier: 3 },
       { id: 'achieve_c_click_10000', name: '一万回のクリック', desc: 'クリッカーで1万回クリック', flavor: '指の第一関節に勲章を与えよう。', game: 'c', category: 'skill', tier: 1 },
       { id: 'achieve_c_kill_100', name: '百人斬り', desc: 'クリッカーで100体敵を倒す', flavor: '倒した敵の数は、もはや覚えていない。', game: 'c', category: 'skill', tier: 2 },
-      { id: 'achieve_c_buff_10min', name: 'ドーピング中毒', desc: 'クリッカーで10分連続で生産アイテムを使用', flavor: '効果が切れるのが怖くて、アイテムを使い続けた。', game: 'c', category: 'skill', tier: 3 },
 
       { id: 'achieve_s_play_1', name: '記憶への挑戦', desc: '神経衰弱を1回プレイ', flavor: '脳細胞が活性化する音が聞こえる。', game: 's', category: 'play', tier: 1 },
       { id: 'achieve_s_play_10', name: '記憶の宮殿の住人', desc: '神経衰弱を10回プレイ', flavor: 'カードの裏側が透けて見える…気がする。', game: 's', category: 'play', tier: 2 },
@@ -53,16 +52,16 @@ const GameMasterData = {
     ],
   
     shop: [
-          { id: 'l_plus', name: 'ラストウォー強化', desc: 'ラストウォーで最初の人が一人増えます。', basePrice: 300, max: 0, game: 'l', category: 'buff', tier: 1,
+          { id: 'l_plus', name: 'ラストウォー強化', desc: 'ラストウォーで最初の人が一人増えます。（無制限）', basePrice: 300, max: 5, game: 'l', category: 'buff', tier: -1,
             calcPrice: (base, n) => base + Math.pow(n, 2) * 100 },
             
-          { id: 'i_bougai_ikkokesu', name: '妨害キャンセラー', desc: 'イライラ棒の妨害ギミックが1つ消えます。', basePrice: 300, max: 0, game: 'i', category: 'buff', tier: 1,
+          { id: 'i_bougai_ikkokesu', name: '妨害キャンセラー', desc: 'イライラ棒の妨害ギミックが1つ消えます。（最大6個まで）', basePrice: 300, max: 6, game: 'i', category: 'buff', tier: 1,
             calcPrice: (base, n) => base + Math.pow(n, 2) * 100 },
             
-          { id: 's_miss_plus', name: '神経衰弱 ミス上限+1', desc: '神経衰弱でミスしていい回数が1回増えます。', basePrice: 300, max: 0, game: 's', category: 'buff', tier: 1,
+          { id: 's_miss_plus', name: '神経衰弱 ミス上限+1', desc: '神経衰弱でミスしていい回数が1回増えます。（無制限）', basePrice: 300, max: -1, game: 's', category: 'buff', tier: 1,
             calcPrice: (base, n) => base + (150 * n) },
             
-          { id: 'c', name: 'クリッカー トークン', desc: 'クリッカーゲームで強化に使えるトークン。', basePrice: 500, max: 0, game: 'c', category: 'buff', tier: 1,
+          { id: 'c', name: 'クリッカー トークン', desc: 'クリッカーゲームで強化に使えるトークン。（無制限）', basePrice: 500, max: -1, game: 'c', category: 'buff', tier: 1,
             calcPrice: (base, n) => base }
         ]
 };
