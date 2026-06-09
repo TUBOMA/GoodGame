@@ -3,11 +3,8 @@ const startButton = document.getElementById('startButton');
 const resetButton = document.getElementById('resetButton');
 const scoreDisplay = document.getElementById('scoreDisplay');
 const missDisplay = document.getElementById('missDisplay');
-const volumeSlider = document.getElementById('volumeSlider');
-const volumeValue = document.getElementById('volumeValue');
 const highScoreDisplay = document.getElementById('highScoreDisplay');
 const messageDisplay = document.getElementById('message');
-const SOUND_VOLUME_KEY = 'memoryGameSoundVolume';
 const flipSound = new Audio('Sounds/カードをめくる.mp3');
 const matchSound = new Audio('Sounds/決定ボタンを押す33.mp3');
 const missSound = new Audio('Sounds/ビープ音4.mp3');
@@ -29,14 +26,6 @@ let secondCard = null;
 let newRecordTimer = null;
 let boardLock = false;
 let isGameActive = false;
-
-const soundEffects = [
-    flipSound,
-    matchSound,
-    missSound,
-    gameClearSound,
-    gameOverSound
-];
 
 function loadHighScore() {
     if (typeof GameSystem === 'undefined') {
@@ -134,30 +123,6 @@ function generateAndShuffleCards() {
     }
 
     return values;
-}
-
-function loadSoundVolume() {
-    const savedVolume = localStorage.getItem(SOUND_VOLUME_KEY);
-    return savedVolume !== null ? Number(savedVolume) : 0.6;
-}
-
-function updateVolumeDisplay() {
-    const percent = Math.round(loadSoundVolume() * 100);
-    volumeSlider.value = percent;
-    volumeValue.textContent = `${percent}%`;
-}
-
-function applySoundVolume(volume) {
-    soundEffects.forEach(sound => {
-        sound.volume = volume;
-    });
-}
-
-function handleVolumeChange() {
-    const volume = Number(volumeSlider.value) / 100;
-    localStorage.setItem(SOUND_VOLUME_KEY, volume);
-    volumeValue.textContent = `${volumeSlider.value}%`;
-    applySoundVolume(volume);
 }
 
 function updateMissDisplay() {
@@ -349,9 +314,6 @@ function initializeGame() {
         missLimit = BASE_MISS_LIMIT + GameSystem.getItemCount('s_miss_plus');
     }
 
-    applySoundVolume(loadSoundVolume());
-    updateVolumeDisplay();
-    updateMissDisplay();
     updateHighScoreDisplay();
     setTimeout(() => {
         updateMissDisplay();
@@ -362,7 +324,6 @@ function initializeGame() {
 
     startButton.addEventListener('click', startGame);
     resetButton.addEventListener('click', resetGame);
-    volumeSlider.addEventListener('input', handleVolumeChange);
 }
 
 function startGame() {
