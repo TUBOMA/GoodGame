@@ -3,9 +3,10 @@
 //セーブ、アイテム、報酬、実績などプレイ結果の保存を管理するクラス
 class ProgressManager {
   constructor() {
-    this.bestTime = Number(localStorage.getItem(Best_Time_Key) || 0);
-    this.timeAttackBestTime = Number(localStorage.getItem(Time_Attack_Best_Time_Key) || 0);
-    this.isTimeAttackUnlocked = localStorage.getItem(Time_Attack_Unlocked_Key) === "true";
+    const data = this.loadGameData() || {};
+    this.bestTime = Number(data.bestTime || 0);
+    this.timeAttackBestTime = Number(data.timeAttackBestTime || 0);
+    this.isTimeAttackUnlocked = data.isTimeAttackUnlocked === true;
 
     //以前に通常モードをクリアしているデータでも、タイムアタックを遊べるようにする
     if (this.bestTime > 0) {
@@ -90,7 +91,9 @@ class ProgressManager {
   }
 
   addPhaseReward(phaseIndex) {
-    GameSystem.addCoins(phaseIndex * 50 + 50);
+    if (typeof GameSystem !== "undefined" && typeof GameSystem.addCoins === "function") {
+      GameSystem.addCoins(phaseIndex * 50 + 50);
+    }
   }
 
   saveClearResult(elapsedSeconds, playMode) {
@@ -99,10 +102,8 @@ class ProgressManager {
     if (oldBestTime === 0 || elapsedSeconds < oldBestTime) {
       if (playMode === Play_Mode.Time_Attack) {
         this.timeAttackBestTime = elapsedSeconds;
-        localStorage.setItem(Time_Attack_Best_Time_Key, String(elapsedSeconds));
       } else {
         this.bestTime = elapsedSeconds;
-        localStorage.setItem(Best_Time_Key, String(elapsedSeconds));
       }
     }
 
@@ -118,13 +119,19 @@ class ProgressManager {
       data.highScore = Math.max((data.highScore || 0), currentScore);
       data.bestTime = this.bestTime;
       data.timeAttackBestTime = this.timeAttackBestTime;
+      data.isTimeAttackUnlocked = this.isTimeAttackUnlocked;
       this.saveGameData(data);
     }
   }
 
   unlockTimeAttack() {
     this.isTimeAttackUnlocked = true;
-    localStorage.setItem(Time_Attack_Unlocked_Key, "true");
+
+    const data = this.loadGameData();
+    if (data) {
+      data.isTimeAttackUnlocked = true;
+      this.saveGameData(data);
+    }
   }
 
   unlockAtCounts(currentCount, achievements) {
@@ -166,6 +173,8 @@ class ProgressManager {
   }
 
   saveGameData(data) {
-    GameSystem.saveGameData(Game_System_Id, data);
+    if (typeof GameSystem !== "undefined" && typeof GameSystem.saveGameData === "function") {
+      GameSystem.saveGameData(Game_System_Id, data);
+    }
   }
 }

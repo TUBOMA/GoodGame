@@ -61,7 +61,9 @@ class HudView {
     this.clearOverlay();
 
     this.overlayGroup = this.scene.add.group();
-    this.overlayGroup.add(this.scene.add.rectangle(Game_Width / 2, Game_Height / 2, Game_Width, Game_Height, 0x111820, 0.82));
+    const backgroundCurtain = this.scene.add.rectangle(Game_Width / 2, Game_Height / 2, Game_Width, Game_Height, 0x111820, 0.55);
+    backgroundCurtain.setDepth(30);
+    this.overlayGroup.add(backgroundCurtain);
 
     const title = Add_Text(this.scene, Game_Width / 2, 226, "RUN!", {
       fontFamily: "sans-serif",
@@ -72,6 +74,7 @@ class HudView {
       strokeThickness: 5,
     });
     title.setOrigin(0.5);
+    title.setDepth(200);
 
     const start = Add_Text(this.scene, Game_Width / 2, 294, "SPACE START", {
       fontFamily: "sans-serif",
@@ -82,9 +85,9 @@ class HudView {
       strokeThickness: 4,
     });
     start.setOrigin(0.5);
+    start.setDepth(200);
 
     this.overlayGroup.addMultiple([title, start]);
-    this.overlayGroup.setDepth(200);
   }
 
   //クリア・ゲームオーバー画面を表示する
@@ -166,30 +169,33 @@ class HudView {
 
   //人数が変わった瞬間の表示
   showFloatingResult(text, x) {
-    let floatingFontSize = 26;
+    let floatingFontSize = 30;
 
     if (text.length >= 15) {
-      floatingFontSize = 16;
+      floatingFontSize = 18;
     } else if (text.length >= 11) {
-      floatingFontSize = 20;
+      floatingFontSize = 22;
     }
 
-    const floatingText = Add_Text(this.scene, x, Player_Y - 78, text, {
+    const floatingText = Add_Text(this.scene, x, Player_Y - 88, text, {
       fontFamily: "sans-serif",
       fontSize: `${floatingFontSize}px`,
       color: "#ffffff",
       fontStyle: "bold",
       stroke: "#0b1017",
-      strokeThickness: 4,
+      strokeThickness: 5,
     });
     floatingText.setOrigin(0.5);
+    floatingText.setScale(0.82);
     floatingText.setDepth(90);
 
     this.scene.tweens.add({
       targets: floatingText,
       y: floatingText.y - 42,
+      scale: 1.08,
       alpha: 0,
       duration: 650,
+      ease: "Back.easeOut",
       onComplete: () => floatingText.destroy(),
     });
   }

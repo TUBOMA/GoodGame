@@ -25,11 +25,8 @@ const Player_Y = 590;
 const Left_Lane_X = 145;
 const Right_Lane_X = 335;
 
-//初期人数と保存に使う名前
+//初期人数と共通保存に使うゲームID
 const Start_Population = 5;
-const Best_Time_Key = "simpleGateRunnerBestTime";
-const Time_Attack_Unlocked_Key = "simpleGateRunnerTimeAttackUnlocked";
-const Time_Attack_Best_Time_Key = "simpleGateRunnerTimeAttackBestTime";
 const Game_System_Id = "lastwar";
 const Speed_Down_Item_Id = "l_plus";
 const Speed_Down_Per_Item = 0.1;
