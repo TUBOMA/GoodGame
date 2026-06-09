@@ -3,9 +3,7 @@
 //セーブ、アイテム、報酬、実績などプレイ結果の保存を管理するクラス
 class ProgressManager {
   constructor() {
-    // ★ 修正：直接 localStorage を見に行かず、GameSystem 経由でデータを一元管理する
     const data = this.loadGameData() || {};
-    
     this.bestTime = Number(data.bestTime || 0);
     this.timeAttackBestTime = Number(data.timeAttackBestTime || 0);
     this.isTimeAttackUnlocked = data.isTimeAttackUnlocked === true;
@@ -93,7 +91,9 @@ class ProgressManager {
   }
 
   addPhaseReward(phaseIndex) {
-    GameSystem.addCoins(phaseIndex * 50 + 50);
+    if (typeof GameSystem !== "undefined" && typeof GameSystem.addCoins === "function") {
+      GameSystem.addCoins(phaseIndex * 50 + 50);
+    }
   }
 
   saveClearResult(elapsedSeconds, playMode) {
@@ -119,19 +119,19 @@ class ProgressManager {
       data.highScore = Math.max((data.highScore || 0), currentScore);
       data.bestTime = this.bestTime;
       data.timeAttackBestTime = this.timeAttackBestTime;
-      
-      // ★ 修正：個別の localStorage 保存をやめ、GameSystemの箱にまとめて保存
+      data.isTimeAttackUnlocked = this.isTimeAttackUnlocked;
       this.saveGameData(data);
     }
   }
 
   unlockTimeAttack() {
     this.isTimeAttackUnlocked = true;
-    
-    // ★ 修正：GameSystem経由で解放状態を保存する
-    const data = this.loadGameData() || {};
-    data.isTimeAttackUnlocked = true;
-    this.saveGameData(data);
+
+    const data = this.loadGameData();
+    if (data) {
+      data.isTimeAttackUnlocked = true;
+      this.saveGameData(data);
+    }
   }
 
   unlockAtCounts(currentCount, achievements) {
@@ -173,6 +173,8 @@ class ProgressManager {
   }
 
   saveGameData(data) {
-    GameSystem.saveGameData(Game_System_Id, data);
+    if (typeof GameSystem !== "undefined" && typeof GameSystem.saveGameData === "function") {
+      GameSystem.saveGameData(Game_System_Id, data);
+    }
   }
 }

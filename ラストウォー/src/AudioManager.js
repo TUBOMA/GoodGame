@@ -1,67 +1,49 @@
 "use strict";
 
-//BGMと効果音の読み込み名をまとめる
-const Audio_Keys = {
-  Home_Bgm: "homeBgm",
-  Play_Bgm: "playBgm",
-  Start: "startSound",
-  Gate: "gateSound",
-  Wall: "wallSound",
-  Fail: "failSound",
-  Clear: "clearSound",
+//BGMと効果音のファイル場所をまとめる
+const Audio_Files = {
+  Home_Bgm: "assets/audio/bgm_home.mp3",
+  Play_Bgm: "assets/audio/bgm_play.mp3",
+  Start: "assets/audio/start.mp3",
+  Gate: "assets/audio/gate.mp3",
+  Wall: "assets/audio/wall.mp3",
+  Fail: "assets/audio/fail.mp3",
+  Clear: "assets/audio/clear.mp3",
 };
 
 //ゲーム中の音を管理するクラス
 class AudioManager {
   static preload(scene) {
-    scene.load.audio(Audio_Keys.Home_Bgm, "assets/audio/bgm_home.mp3");
-    scene.load.audio(Audio_Keys.Play_Bgm, "assets/audio/bgm_play.mp3");
-    scene.load.audio(Audio_Keys.Start, "assets/audio/start.mp3");
-    scene.load.audio(Audio_Keys.Gate, "assets/audio/gate.mp3");
-    scene.load.audio(Audio_Keys.Wall, "assets/audio/wall.mp3");
-    scene.load.audio(Audio_Keys.Fail, "assets/audio/fail.mp3");
-    scene.load.audio(Audio_Keys.Clear, "assets/audio/clear.mp3");
+    //普通にフォルダ共有して開く時も止まらないよう、Phaserのロード待ちは使わない
   }
 
   constructor(scene) {
     this.scene = scene;
     this.delayedHomeBgmEvent = null;
     this.delayedPlayBgmEvent = null;
-    this.shouldPlayHomeWhenUnlocked = false;
 
-    this.homeBgm = scene.sound.add(Audio_Keys.Home_Bgm, { loop: true, volume: 0.28 });
-    this.playBgm = scene.sound.add(Audio_Keys.Play_Bgm, { loop: true, volume: 0.33 });
-    this.startSound = scene.sound.add(Audio_Keys.Start, { volume: 0.75 });
-    this.gateSound = scene.sound.add(Audio_Keys.Gate, { volume: 0.55 });
-    this.wallSound = scene.sound.add(Audio_Keys.Wall, { volume: 0.7 });
-    this.failSound = scene.sound.add(Audio_Keys.Fail, { volume: 0.75 });
-    this.clearSound = scene.sound.add(Audio_Keys.Clear, { volume: 0.8 });
+    this.homeBgm = this.createSound(Audio_Files.Home_Bgm, true, 0.28);
+    this.playBgm = this.createSound(Audio_Files.Play_Bgm, true, 0.33);
+    this.startSound = this.createSound(Audio_Files.Start, false, 0.75);
+    this.gateSound = this.createSound(Audio_Files.Gate, false, 0.55);
+    this.wallSound = this.createSound(Audio_Files.Wall, false, 0.7);
+    this.failSound = this.createSound(Audio_Files.Fail, false, 0.75);
+    this.clearSound = this.createSound(Audio_Files.Clear, false, 0.8);
+  }
 
-    //ブラウザの自動再生制限で、最初の入力まで音を鳴らせない場合に備える
-    if (scene.sound.locked) {
-      scene.sound.once("unlocked", () => {
-        if (this.shouldPlayHomeWhenUnlocked && this.scene.gameState === "ready") {
-          this.playHomeBgm();
-        }
-      });
-    }
+  createSound(filePath, shouldLoop, volume) {
+    const sound = new Audio(filePath);
+    sound.loop = shouldLoop;
+    sound.volume = volume;
+    sound.preload = "auto";
+    return sound;
   }
 
   //プレイ前のBGMを流す
   playHomeBgm() {
     this.cancelDelayedHomeBgm();
-
-    if (this.scene.sound.locked) {
-      this.shouldPlayHomeWhenUnlocked = true;
-      return;
-    }
-
-    this.shouldPlayHomeWhenUnlocked = false;
-    this.playBgm.stop();
-
-    if (!this.homeBgm.isPlaying) {
-      this.homeBgm.play();
-    }
+    this.stopSound(this.playBgm);
+    this.playLoop(this.homeBgm);
   }
 
   //開始音が終わってからプレイ中BGMを流す
@@ -71,7 +53,7 @@ class AudioManager {
     this.cancelDelayedPlayBgm();
     this.playEffect(this.startSound);
 
-    const startDuration = Number(this.startSound.duration) || 0.35;
+    const startDuration = Number.isFinite(this.startSound.duration) ? this.startSound.duration : 0.35;
     const startDelay = Math.max(350, startDuration * 1000);
     this.delayedPlayBgmEvent = this.scene.time.delayedCall(startDelay, () => {
       if (this.scene.gameState === "playing") {
@@ -81,11 +63,8 @@ class AudioManager {
   }
 
   playGameBgm() {
-    this.homeBgm.stop();
-
-    if (!this.playBgm.isPlaying) {
-      this.playBgm.play();
-    }
+    this.stopSound(this.homeBgm);
+    this.playLoop(this.playBgm);
   }
 
   playGate() {
@@ -121,11 +100,10 @@ class AudioManager {
   }
 
   stopAllBgm() {
-    this.shouldPlayHomeWhenUnlocked = false;
     this.cancelDelayedHomeBgm();
     this.cancelDelayedPlayBgm();
-    this.homeBgm.stop();
-    this.playBgm.stop();
+    this.stopSound(this.homeBgm);
+    this.stopSound(this.playBgm);
   }
 
   cancelDelayedHomeBgm() {
@@ -143,18 +121,40 @@ class AudioManager {
   }
 
   playEffect(sound) {
-    if (sound.isPlaying) {
-      sound.stop();
-    }
-
-    sound.play();
+    this.stopSound(sound);
+    this.playSound(sound);
   }
 
   stopEffectSounds() {
-    this.startSound.stop();
-    this.gateSound.stop();
-    this.wallSound.stop();
-    this.failSound.stop();
-    this.clearSound.stop();
+    this.stopSound(this.startSound);
+    this.stopSound(this.gateSound);
+    this.stopSound(this.wallSound);
+    this.stopSound(this.failSound);
+    this.stopSound(this.clearSound);
+  }
+
+  playLoop(sound) {
+    if (sound.paused) {
+      this.playSound(sound);
+    }
+  }
+
+  playSound(sound) {
+    const playResult = sound.play();
+
+    //自動再生制限などで鳴らせない時も、ゲーム本体は止めない
+    if (playResult && typeof playResult.catch === "function") {
+      playResult.catch(() => {});
+    }
+  }
+
+  stopSound(sound) {
+    sound.pause();
+
+    try {
+      sound.currentTime = 0;
+    } catch (error) {
+      //読み込み前の音は currentTime を戻せないことがある
+    }
   }
 }
