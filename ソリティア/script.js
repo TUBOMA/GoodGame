@@ -311,33 +311,36 @@ function gameEnd() {
     resetButton.disabled = true;
     startButton.textContent = 'もう一度プレイ';
 
+    const stats = loadGameStats();
+    const currentPlayCount = stats.playCount;
+    const currentClearCount = stats.clearCount;
     const currentHighScore = loadHighScore();
-    if (playCount === 1) {
+    if (playCount >= 1) {
         if(typeof GameSystem !== 'undefined') {
             GameSystem.unlockAchievement('achieve_s_play_1');
         }
     }
-    if (playCount === 10) {
+    if (playCount >= 10) {
         if(typeof GameSystem !== 'undefined') {
             GameSystem.unlockAchievement('achieve_s_play_10');
         }
     }
-    if (playCount === 100) {
+    if (playCount >= 100) {
         if(typeof GameSystem !== 'undefined') {
             GameSystem.unlockAchievement('achieve_s_play_100');
         }
     }
-    if (clearCount === 1) {
+    if (clearCount >= 1) {
         if(typeof GameSystem !== 'undefined') {
             GameSystem.unlockAchievement('achieve_s_clear_1');
         }
     }
-    if (clearCount === 10) {
+    if (clearCount >= 10) {
         if(typeof GameSystem !== 'undefined') {
             GameSystem.unlockAchievement('achieve_s_clear_10');
         }
     }
-    if (clearCount === 100) {
+    if (clearCount >= 100) {
         if(typeof GameSystem !== 'undefined') {
             GameSystem.unlockAchievement('achieve_s_clear_100');
         }
@@ -392,7 +395,9 @@ function startGame() {
     startButton.disabled = true;
     resetButton.disabled = false;
     messageDisplay.textContent = 'カードをめくってください';
-    addPlayCount();
+    if (typeof GameSystem !== 'undefined') {
+        addPlayCount();
+    }
 
     const shuffledValues = generateAndShuffleCards();
     createBoard(shuffledValues);
