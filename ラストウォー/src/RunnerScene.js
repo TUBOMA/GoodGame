@@ -5,13 +5,19 @@ class RunnerScene extends Phaser.Scene {
   constructor() {
     super("RunnerScene");
   }
+
+  preload() {
+    AudioManager.preload(this);
+  }
   
   create() {
     this.playMode = Play_Mode.Normal;
 
     //描画と保存判定を担当するクラスを用意する
+    this.audioManager = new AudioManager(this);
     this.roadView = new RoadView(this);
     this.playerView = new PlayerView(this);
+    this.effectView = new EffectView(this);
     this.hudView = new HudView(this);
     this.fallingObjectFactory = new FallingObjectFactory(this);
     this.progressManager = new ProgressManager();
@@ -68,11 +74,13 @@ class RunnerScene extends Phaser.Scene {
     this.hudView.setModeMessage("");
     this.hudView.updateModeSelection(this.playMode, false);
     this.hudView.showStartScreen();
+    this.audioManager.playHomeBgm();
     this.updateHud();
   }
 
   //選択中のモードで新しいプレイを開始する
   startGame(playMode) {
+    this.audioManager.playStartThenPlayBgm();
     this.hudView.clearOverlay();
     this.clearFallingObject();
 
@@ -176,6 +184,10 @@ class RunnerScene extends Phaser.Scene {
 
   //プレイヤーを選んだレーンへ移動する
   movePlayerToLane(lane) {
+    const oldX = this.playerView.getX();
+    const targetX = lane === Lane.Left ? Left_Lane_X : Right_Lane_X;
+
+    this.effectView.playLaneMove(oldX, targetX);
     this.playerView.moveToLane(lane);
     this.roadView.updateLaneHighlight(lane);
   }
@@ -244,12 +256,15 @@ class RunnerScene extends Phaser.Scene {
     const selectedGate = selectedLane === Lane.Left
       ? this.fallingObject.gates[0]
       : this.fallingObject.gates[1];
+    const selectedX = selectedLane === Lane.Left ? Left_Lane_X : Right_Lane_X;
     const oldPopulation = this.population;
     this.population = Calculate_Population(this.population, selectedGate);
 
     this.fallingObjectFactory.markSelectedGate(this.fallingObject, selectedLane);
+    this.audioManager.playGate();
+    this.effectView.playGatePass(selectedX, this.population >= oldPopulation);
     this.playerView.updatePopulation(this.population);
-    this.hudView.showFloatingResult(`${oldPopulation} -> ${this.population}`, this.playerView.getX());
+    this.hudView.showFloatingResult(`${oldPopulation} -> ${this.population}`, selectedX);
 
     this.currentGatePairIndex += 1;
 
@@ -304,6 +319,8 @@ class RunnerScene extends Phaser.Scene {
       return;
     }
 
+    this.audioManager.playWall();
+    this.effectView.playWallBreak();
     this.progressManager.addPhaseReward(this.phaseIndex);
 
     //フェーズを進める
@@ -315,6 +332,7 @@ class RunnerScene extends Phaser.Scene {
   finishGame(didClear, reason) {
     //クリア・ゲームオーバーの結果を保存して表示する
     this.gameState = didClear ? "clear" : "gameover";
+    this.audioManager.playEndSound(didClear);
     const didUnlockTimeAttack = this.progressManager.recordResult(
       didClear,
       this.elapsedSeconds,

@@ -66,20 +66,24 @@
     <!-- 座標、モード、フェーズ、人数計算などの基本設定 -->
     <script src="src/settings.js?v=simple-structure"></script>
     <!-- セーブ、アイテム効果、報酬、実績判定を管理 -->
-    <script src="src/ProgressManager.js?v=simple-structure"></script>
+    <script src="src/ProgressManager.js?v=common-save"></script>
     <!-- ゲート問題のランダム生成 -->
     <script src="src/GateGenerator.js?v=simple-structure"></script>
+    <!-- BGMと効果音を管理 -->
+    <script src="src/AudioManager.js?v=shareable-audio"></script>
+    <!-- 移動や通過時の演出を管理 -->
+    <script src="src/EffectView.js?v=juice"></script>
     <!-- 背景関係の描画を管理 -->
     <script src="src/RoadView.js?v=simple-structure"></script>
     <!-- プレイヤーの描画を管理 -->
-    <script src="src/PlayerView.js?v=simple-structure"></script>
+    <script src="src/PlayerView.js?v=juice"></script>
     <!-- UIの描画を管理 -->
-    <script src="src/HudView.js?v=simple-structure"></script>
+    <script src="src/HudView.js?v=visible-player"></script>
     <!-- 道の上の物をPhaserの機能で作り出す -->
     <script src="src/FallingObjectFactory.js?v=simple-structure"></script>
   
     <!-- 全体のフェーズ管理 -->
-    <script src="src/RunnerScene.js?v=simple-structure"></script>
+    <script src="src/RunnerScene.js?v=juice"></script>
     <!-- Phaserの起動 -->
     <script src="main.js?v=simple-structure"></script>
   </body>
