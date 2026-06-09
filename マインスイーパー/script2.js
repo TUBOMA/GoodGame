@@ -9,6 +9,9 @@ let attack = 1;
 let auto = 0;
 let coin = 0;
 
+// ★追加：この画面を開いてから、すでにプレイ回数をカウントしたかの判定フラグ
+let hasCountedPlay = false;
+
 // ===== スキル =====
 let skills = {
   attackSkill: 0,
@@ -51,7 +54,6 @@ function initGame() {
       skills = { ...skills, ...myData.skills };
     }
     
-    // ★修正：起動時の自動加算は廃止しました。
     // データの整合性を保つため箱に戻す処理だけ残します
     GameSystem.saveGameData(GAME_ID, myData);
   }
@@ -86,7 +88,7 @@ function defeatEnemy() {
   if (typeof GameSystem !== 'undefined') {
     GameSystem.addCoins(reward);
     
-    // ★追加：敵を倒した数（クリア回数）をカウントして保存
+    // 敵を倒した数（クリア回数）をカウントして保存
     let myData = GameSystem.loadGameData(GAME_ID);
     myData.clearCount = (myData.clearCount || 0) + 1;
     GameSystem.saveGameData(GAME_ID, myData);
@@ -157,14 +159,12 @@ function applySkills() {
 function doDamage() {
   addCombo();
 
-  // ★追加：最初に敵を殴った時（一撃目）を数える処理
-  if (typeof GameSystem !== 'undefined') {
+  // ★ 修正：画面を開いて「初めてクリックした時」にプレイ回数を+1する
+  if (!hasCountedPlay && typeof GameSystem !== 'undefined') {
     let myData = GameSystem.loadGameData(GAME_ID);
-    // まだ一度も殴ったことがなければカウントを1にする
-    if (!myData.playCount || myData.playCount === 0) {
-      myData.playCount = 1;
-      GameSystem.saveGameData(GAME_ID, myData);
-    }
+    myData.playCount = (myData.playCount || 0) + 1;
+    GameSystem.saveGameData(GAME_ID, myData);
+    hasCountedPlay = true; // この画面を開いている間は二度とカウントしない
   }
 
   let damage = attack * getComboMultiplier();
@@ -193,7 +193,6 @@ function doDamage() {
   if (hp <= 0) {
     defeatEnemy();
   } else {
-    saveGame(); // HP減少をセーブ
     updateUI();
   }
 }
@@ -251,7 +250,7 @@ function checkAchievements() {
   let myData = GameSystem.loadGameData(GAME_ID);
   const playCount = myData.playCount || 0;
 
-  // プレイ回数系（敵を初めて殴った時に条件が達成されます）
+  // プレイ回数系
   if (playCount >= 1) GameSystem.unlockAchievement("achieve_c_play_1");
   if (playCount >= 10) GameSystem.unlockAchievement("achieve_c_play_10");
   if (playCount >= 100) GameSystem.unlockAchievement("achieve_c_play_100");
@@ -311,3 +310,12 @@ setInterval(() => {
 // 🚀 ゲーム起動時の処理
 // =========================================
 initGame();
+
+// 3秒に1回、裏でひっそりオートセーブ
+setInterval(() => {
+  saveGame();
+}, 3000);
+
+window.addEventListener("beforeunload", () => {
+  saveGame();
+});
