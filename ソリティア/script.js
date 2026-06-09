@@ -315,21 +315,6 @@ function gameEnd() {
     const currentPlayCount = stats.playCount;
     const currentClearCount = stats.clearCount;
     const currentHighScore = loadHighScore();
-    if (playCount >= 1) {
-        if(typeof GameSystem !== 'undefined') {
-            GameSystem.unlockAchievement('achieve_s_play_1');
-        }
-    }
-    if (playCount >= 10) {
-        if(typeof GameSystem !== 'undefined') {
-            GameSystem.unlockAchievement('achieve_s_play_10');
-        }
-    }
-    if (playCount >= 100) {
-        if(typeof GameSystem !== 'undefined') {
-            GameSystem.unlockAchievement('achieve_s_play_100');
-        }
-    }
     if (clearCount >= 1) {
         if(typeof GameSystem !== 'undefined') {
             GameSystem.unlockAchievement('achieve_s_clear_1');
@@ -399,6 +384,22 @@ function startGame() {
         addPlayCount();
     }
 
+    if (playCount >= 1) {
+        if(typeof GameSystem !== 'undefined') {
+            GameSystem.unlockAchievement('achieve_s_play_1');
+        }
+    }
+    if (playCount >= 10) {
+        if(typeof GameSystem !== 'undefined') {
+            GameSystem.unlockAchievement('achieve_s_play_10');
+        }
+    }
+    if (playCount >= 100) {
+        if(typeof GameSystem !== 'undefined') {
+            GameSystem.unlockAchievement('achieve_s_play_100');
+        }
+    }
+    
     const shuffledValues = generateAndShuffleCards();
     createBoard(shuffledValues);
 }
