@@ -4,12 +4,54 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Simple Gate Runner</title>
-    <link rel="stylesheet" href="style.css?v=fixrun3" />
+    <link rel="stylesheet" href="style.css?v=simple-structure" />
   </head>
   <body>
     <a href="../index.html" class="back-to-home">◀ ホームに戻る</a>
-    <main id="game-wrap">
-      <div id="game"></div>
+
+    <main class="arcade-shell">
+      <header class="status-row">
+        <section class="status-panel population-panel">
+          <p class="status-label">人数</p>
+          <strong id="outside-population" class="population-value">5</strong>
+        </section>
+
+        <section class="status-panel progress-panel">
+          <div class="status-block">
+            <p class="status-label">PHASE</p>
+            <strong id="outside-phase" class="status-value">1 / 5</strong>
+          </div>
+          <div class="status-block">
+            <p class="status-label">TIME</p>
+            <strong id="outside-time" class="status-value">0.00s</strong>
+          </div>
+          <div class="status-block">
+            <p class="status-label">BEST</p>
+            <strong id="outside-best" class="status-value">--</strong>
+          </div>
+        </section>
+      </header>
+
+      <section class="playfield-panel">
+        <div class="canvas-frame">
+          <div id="game"></div>
+        </div>
+      </section>
+
+      <footer class="action-panel">
+        <fieldset class="mode-selector">
+          <legend class="status-label">MODE</legend>
+          <label class="mode-option">
+            <input id="normal-mode" type="radio" name="play-mode" value="normal" checked />
+            <span>NORMAL</span>
+          </label>
+          <label class="mode-option">
+            <input id="time-attack-mode" type="radio" name="play-mode" value="timeAttack" />
+            <span>TIME ATTACK</span>
+          </label>
+          <p id="mode-message" class="mode-message" aria-live="polite"></p>
+        </fieldset>
+      </footer>
     </main>
 
     <!-- Phaserをネット経由で呼び出すことでweb上で使えるようにする -->
@@ -17,24 +59,32 @@
 
     <!-- コードの呼び出す場所。上から順に呼ぶ -->
 
-     <!-- 互換機能の追加 -->
+    <!-- 実績名など、共通データの読み込み -->
+    <script src="../common/master_data.js"></script>
+    <!-- コイン、アイテム、セーブ、実績送信を提供する共通システム -->
     <script src="../common/main.js"></script>
-    <!-- フェーズごとの設定 -->
-    <script src="src/settings.js?v=fixrun3"></script>
+    <!-- 座標、モード、フェーズ、人数計算などの基本設定 -->
+    <script src="src/settings.js?v=simple-structure"></script>
+    <!-- セーブ、アイテム効果、報酬、実績判定を管理 -->
+    <script src="src/ProgressManager.js?v=juice"></script>
     <!-- ゲート問題のランダム生成 -->
-    <script src="src/GateGenerator.js?v=fixrun3"></script>
+    <script src="src/GateGenerator.js?v=simple-structure"></script>
+    <!-- BGMと効果音を管理 -->
+    <script src="src/AudioManager.js?v=audio"></script>
+    <!-- 移動や通過時の演出を管理 -->
+    <script src="src/EffectView.js?v=juice"></script>
     <!-- 背景関係の描画を管理 -->
-    <script src="src/RoadView.js?v=fixrun3"></script>
+    <script src="src/RoadView.js?v=simple-structure"></script>
     <!-- プレイヤーの描画を管理 -->
-    <script src="src/PlayerView.js?v=fixrun3"></script>
+    <script src="src/PlayerView.js?v=juice"></script>
     <!-- UIの描画を管理 -->
-    <script src="src/HudView.js?v=fixrun3"></script>
+    <script src="src/HudView.js?v=juice"></script>
     <!-- 道の上の物をPhaserの機能で作り出す -->
-    <script src="src/FallingObjectFactory.js?v=fixrun3"></script>
+    <script src="src/FallingObjectFactory.js?v=simple-structure"></script>
   
     <!-- 全体のフェーズ管理 -->
-    <script src="src/RunnerScene.js?v=fixrun3"></script>
+    <script src="src/RunnerScene.js?v=juice"></script>
     <!-- Phaserの起動 -->
-    <script src="main.js?v=fixrun3"></script>
+    <script src="main.js?v=simple-structure"></script>
   </body>
 </html>

@@ -1,6 +1,6 @@
 "use strict";
 
-//Phaserを起動するやつ
+//Phaserを起動する設定
 
 const Game_Config = {
   type: Phaser.AUTO,

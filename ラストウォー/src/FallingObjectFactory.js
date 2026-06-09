@@ -1,13 +1,12 @@
 "use strict";
 
-//ゲート上のものをつくるやつ
+//流れてくるゲート、壁、ゴールの表示を作るクラス
 class FallingObjectFactory {
   constructor(scene) {
     this.scene = scene;
   }
 
-  //指定した位置に指定した色のゲートを二つ作り出すやつ
-  //どのゲートをどのフェーズの設定でどの距離感で作り出すか
+  //一組の選択ゲートを作る
   createGatePair(gatePair, phase, gatePairIndex) {
     const container = this.scene.add.container(0, -90);
     container.setDepth(20);
@@ -31,7 +30,7 @@ class FallingObjectFactory {
       rightGlow: rightGate.glow,
     };
   }
-  //指定した位置に指定した色のゲートを一つ作り出すやつ
+  //一つのゲート表示を作る
   createGateVisual(x, gate, color) {
     const shadow = this.scene.add.rectangle(x + 6, 8, 148, 88, 0x000000, 0.24);
     const glow = this.scene.add.rectangle(x, 0, 156, 96, color, 0.16);
@@ -39,9 +38,17 @@ class FallingObjectFactory {
     const shine = this.scene.add.rectangle(x, -30, 132, 12, 0xffffff, 0.23);
     box.setStrokeStyle(3, 0xffffff, 0.88);
 
+    let gateFontSize = 34;
+
+    if (gate.label.length >= 7) {
+      gateFontSize = 20;
+    } else if (gate.label.length >= 5) {
+      gateFontSize = 26;
+    }
+
     const text = Add_Text(this.scene, x, 0, gate.label, {
       fontFamily: "sans-serif",
-      fontSize: `${34}px`,
+      fontSize: `${gateFontSize}px`,
       color: "#111820",
       fontStyle: "bold",
       stroke: "#ffffff",
@@ -52,9 +59,8 @@ class FallingObjectFactory {
     return { box, glow, parts: [shadow, glow, box, shine, text] };
   }
 
-  //視認性を悪くするためのやつ
+  //後半フェーズで判断を難しくするノイズ文字を追加する
   addVisualNoise(container, phase, gatePairIndex) {
-    //noisecountが0なら処理せずそのまま終了させる
     if (phase.noiseCount === 0) {
       return;
     }
@@ -77,8 +83,7 @@ class FallingObjectFactory {
     }
   }
   
-  //フェーズごとの最後の数字を生成
-  //
+  //フェーズ最後の壁を作る
   createWall(cost) {
     const container = this.scene.add.container(0, -90);
     container.setDepth(20);
@@ -88,9 +93,11 @@ class FallingObjectFactory {
     const shine = this.scene.add.rectangle(Game_Width / 2, -25, 312, 10, 0xffffff, 0.2);
     wall.setStrokeStyle(3, 0xffffff, 0.85);
 
-    const text = Add_Text(this.scene, Game_Width / 2, 0, `WALL -${cost}`, {
+    const wallLabel = `WALL -${cost}`;
+    const wallFontSize = wallLabel.length >= 14 ? 20 : wallLabel.length >= 11 ? 25 : 30;
+    const text = Add_Text(this.scene, Game_Width / 2, 0, wallLabel, {
       fontFamily: "sans-serif",
-      fontSize: `${30}px`,
+      fontSize: `${wallFontSize}px`,
       color: "#ffffff",
       fontStyle: "bold",
       stroke: "#6d1830",
@@ -110,7 +117,7 @@ class FallingObjectFactory {
   }
 
   createGoal() {
-    // ゴールを作る
+    //最終地点のゴールを作る
     const container = this.scene.add.container(0, -90);
     container.setDepth(20);
 
@@ -129,7 +136,6 @@ class FallingObjectFactory {
     });
     text.setOrigin(0.5);
 
-    //
     container.add([shadow, line, shine, text]);
 
     return {
@@ -141,7 +147,7 @@ class FallingObjectFactory {
   }
 
   markSelectedGate(fallingObject, selectedLane) {
-    // 選んだゲートを強調する処理
+    //通過したゲートを強調する
     const selectedBox = selectedLane === Lane.Left ? fallingObject.leftBox : fallingObject.rightBox;
     const otherBox = selectedLane === Lane.Left ? fallingObject.rightBox : fallingObject.leftBox;
     const selectedGlow = selectedLane === Lane.Left ? fallingObject.leftGlow : fallingObject.rightGlow;

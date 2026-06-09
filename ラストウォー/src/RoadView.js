@@ -1,15 +1,17 @@
 "use strict";
 
-//道路関係の見え方管理
+//道路とタイムアタック時の加速演出を管理するクラス
 class RoadView {
   constructor(scene) {
     this.scene = scene;
     this.roadStripes = [];
+    this.boostTimeRemaining = 0;
+    this.boostLines = [];
 
     this.createRoad();
   }
 
-  //道路の表示設定
+  //道路を描画する
   createRoad() {
     this.scene.add.rectangle(Game_Width / 2, Game_Height / 2, Game_Width, Game_Height, 0x0f1720);
     this.scene.add.rectangle(Game_Width / 2, Game_Height / 2, 386, Game_Height, 0x10151c, 0.55);
@@ -35,7 +37,7 @@ class RoadView {
     this.fog.setDepth(50);
   }
 
-  //いる方のレーンの色を変える
+  //プレイヤーがいるレーンを明るく表示する
   updateLaneHighlight(currentLane) {
     const leftAlpha = currentLane === Lane.Left ? 0.12 : 0.02;
     const rightAlpha = currentLane === Lane.Right ? 0.12 : 0.02;
@@ -44,16 +46,77 @@ class RoadView {
     this.rightLaneHighlight.setFillStyle(0x3ddc97, rightAlpha);
   }
 
-  //なんかモヤモヤのやつ
+  //フェーズに応じた霧の濃さを反映する
   setFog(alpha) {
     this.fog.setAlpha(alpha);
   }
 
-  //スピード感出すための線
+  //タイムアタックで即座に選んだ時の加速演出
+  showBoostEffect(lane) {
+    this.boostTimeRemaining = 230;
+
+    const laneX = lane === Lane.Left ? Left_Lane_X : Right_Lane_X;
+    const activeHighlight = lane === Lane.Left ? this.leftLaneHighlight : this.rightLaneHighlight;
+    const linePositions = [
+      { x: -64, y: 130 },
+      { x: 64, y: 210 },
+      { x: -64, y: 320 },
+      { x: 64, y: 410 },
+    ];
+
+    //前回選んだレーンの光が残らないよう、左右両方の明滅を止める
+    this.scene.tweens.killTweensOf(this.leftLaneHighlight);
+    this.scene.tweens.killTweensOf(this.rightLaneHighlight);
+    activeHighlight.setFillStyle(0x3ddc97, 0.27);
+    this.scene.tweens.add({
+      targets: activeHighlight,
+      fillAlpha: 0.12,
+      duration: 230,
+    });
+
+    for (const position of linePositions) {
+      const speedLine = this.scene.add.rectangle(laneX + position.x, position.y, 5, 70, 0xa8f5ff, 0.82);
+      speedLine.setDepth(20);
+      this.boostLines.push(speedLine);
+
+      this.scene.tweens.add({
+        targets: speedLine,
+        y: position.y + 190,
+        scaleY: 1.8,
+        alpha: 0,
+        duration: 230,
+        ease: "Quad.easeIn",
+        onComplete: () => {
+          speedLine.destroy();
+          this.boostLines = this.boostLines.filter((line) => line !== speedLine);
+        },
+      });
+    }
+  }
+
+  //リトライ時などに、前回プレイの加速演出を残さない
+  resetBoostEffect() {
+    this.boostTimeRemaining = 0;
+    this.scene.tweens.killTweensOf(this.leftLaneHighlight);
+    this.scene.tweens.killTweensOf(this.rightLaneHighlight);
+
+    for (const speedLine of this.boostLines) {
+      this.scene.tweens.killTweensOf(speedLine);
+      speedLine.destroy();
+    }
+
+    this.boostLines = [];
+  }
+
+  //道路中央の線を流して前進感を表示する
   moveStripes(speed, delta) {
-    //距離感の計算
+    if (this.boostTimeRemaining > 0) {
+      speed *= 2.6;
+      this.boostTimeRemaining -= delta;
+    }
+
     const distance = speed * (delta / 1000);
-    //線を速度をもとに生成する
+
     for (const stripe of this.roadStripes) {
       stripe.y += distance;
 
