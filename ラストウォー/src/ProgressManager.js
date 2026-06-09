@@ -90,13 +90,6 @@ class ProgressManager {
   }
 
   addPhaseReward(phaseIndex) {
-    if (
-      typeof GameSystem === "undefined" ||
-      typeof GameSystem.addCoins !== "function"
-    ) {
-      return;
-    }
-
     GameSystem.addCoins(phaseIndex * 50 + 50);
   }
 

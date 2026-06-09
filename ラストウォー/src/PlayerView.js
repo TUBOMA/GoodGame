@@ -28,27 +28,16 @@ class PlayerView {
 
   resetLane() {
     //新しいプレイでは左レーンから始める
-    this.scene.tweens.killTweensOf(this.container);
     this.currentLane = Lane.Left;
     this.container.x = Left_Lane_X;
-    this.container.setAngle(0);
-    this.container.setScale(1);
   }
 
   moveToLane(lane) {
     this.currentLane = lane;
     const targetX = lane === Lane.Left ? Left_Lane_X : Right_Lane_X;
-    const direction = targetX > this.container.x ? 1 : -1;
-
-    this.scene.tweens.killTweensOf(this.container);
-    this.container.setAngle(direction * -10);
-    this.container.setScale(1.12, 0.9);
     this.scene.tweens.add({
       targets: this.container,
       x: targetX,
-      angle: 0,
-      scaleX: 1,
-      scaleY: 1,
       duration: 80,
       ease: "Sine.easeOut",
     });

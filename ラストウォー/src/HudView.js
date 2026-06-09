@@ -166,33 +166,30 @@ class HudView {
 
   //人数が変わった瞬間の表示
   showFloatingResult(text, x) {
-    let floatingFontSize = 30;
+    let floatingFontSize = 26;
 
     if (text.length >= 15) {
-      floatingFontSize = 18;
+      floatingFontSize = 16;
     } else if (text.length >= 11) {
-      floatingFontSize = 22;
+      floatingFontSize = 20;
     }
 
-    const floatingText = Add_Text(this.scene, x, Player_Y - 88, text, {
+    const floatingText = Add_Text(this.scene, x, Player_Y - 78, text, {
       fontFamily: "sans-serif",
       fontSize: `${floatingFontSize}px`,
       color: "#ffffff",
       fontStyle: "bold",
       stroke: "#0b1017",
-      strokeThickness: 5,
+      strokeThickness: 4,
     });
     floatingText.setOrigin(0.5);
-    floatingText.setScale(0.82);
     floatingText.setDepth(90);
 
     this.scene.tweens.add({
       targets: floatingText,
       y: floatingText.y - 42,
-      scale: 1.08,
       alpha: 0,
       duration: 650,
-      ease: "Back.easeOut",
       onComplete: () => floatingText.destroy(),
     });
   }
