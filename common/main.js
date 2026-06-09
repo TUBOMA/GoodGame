@@ -12,6 +12,19 @@ const DEFAULT_SAVE_DATA = {
 };
 
 const GameSystem = {
+    
+    // ★追加：現在セットされている称号のIDを取得する
+      getSelectedTitle: function() {
+        const data = this._loadAll();
+        return data.common.selectedTitle || null;
+      },
+
+      // ★追加：称号をセットしてセーブする
+      setSelectedTitle: function(achId) {
+        const data = this._loadAll();
+        data.common.selectedTitle = achId;
+        this._saveAll(data);
+      },
   _loadAll: function() {
     const dataString = localStorage.getItem(SAVE_KEY);
     return dataString ? JSON.parse(dataString) : JSON.parse(JSON.stringify(DEFAULT_SAVE_DATA));
@@ -20,19 +33,22 @@ const GameSystem = {
   // =========================================
   // データをセーブする（鉄壁のセキュリティ版）
   // =========================================
-  _saveAll: function(dataObj) {
-    // ★ 余計な箱を弾くセキュリティは残しつつ、箱の名前を achievements に変更
-    const cleanData = {
-      common: {
-        coins: typeof dataObj.common?.coins === 'number' ? dataObj.common.coins : 0,
-        ownedItems: dataObj.common?.ownedItems || {},
-        achievements: dataObj.common?.achievements || []
-      },
-      games: dataObj.games || {} // 各ゲームの個別セーブデータエリア
-    };
+    // =========================================
+      // データをセーブする（鉄壁のセキュリティ版）
+      // =========================================
+      _saveAll: function(dataObj) {
+        const cleanData = {
+          common: {
+            coins: typeof dataObj.common?.coins === 'number' ? dataObj.common.coins : 0,
+            ownedItems: dataObj.common?.ownedItems || {},
+            achievements: dataObj.common?.achievements || [],
+            selectedTitle: dataObj.common?.selectedTitle || null // ★この1行を追加！
+          },
+          games: dataObj.games || {}
+        };
 
-    localStorage.setItem(SAVE_KEY, JSON.stringify(cleanData));
-  },
+        localStorage.setItem(SAVE_KEY, JSON.stringify(cleanData));
+      },
 
   getCoins: function() {
     return this._loadAll().common.coins;
@@ -108,61 +124,11 @@ const GameSystem = {
     return data.games[gameId] || {};
   },
 
-    saveGameData: function(gameId, gameDataObj) {
-        const data = this._loadAll();
-        data.games[gameId] = gameDataObj;
-        this._saveAll(data);
-        
-        // ★追加：データがセーブされた瞬間に、裏で全ゲーム合計プレイ回数を自動チェック！
-        this._checkTotalPlayAchievements();
-      },
-
-      // ★追加：全ゲームの合計プレイ回数を計算して実績解除する専用関数
-      _checkTotalPlayAchievements: function() {
-        const data = this._loadAll();
-        let totalPlayCount = 0;
-
-        if (data && data.games) {
-          for (const id in data.games) {
-            if (data.games[id].playCount) {
-              totalPlayCount += data.games[id].playCount;
-            }
-          }
-        }
-
-        // 解除済みなら何もしない安全設計なので、毎回呼ばれても一瞬で終わります
-        if (totalPlayCount >= 1) this.unlockAchievement("achieve_all_play_1");
-        if (totalPlayCount >= 10) this.unlockAchievement("achieve_all_play_10");
-        if (totalPlayCount >= 100) this.unlockAchievement("achieve_all_play_100");
-        if (totalPlayCount >= 1000) this.unlockAchievement("achieve_all_play_1000");
-      },
-    
-    // =========================================
-      // セーブデータの出力・引き継ぎ（Base64暗号化）
-      // =========================================
-      exportSaveData: function() {
-        const dataString = localStorage.getItem(SAVE_KEY);
-        if (!dataString) return "";
-        // 文字化けを防ぎつつ、解読不能なコード（Base64）に変換する
-        return btoa(unescape(encodeURIComponent(dataString)));
-      },
-
-      importSaveData: function(base64Str) {
-        try {
-          // 暗号化されたコードを元のデータ（JSON）に復元
-          const decodedStr = decodeURIComponent(escape(atob(base64Str)));
-          const parsed = JSON.parse(decodedStr);
-          
-          // 正しいセーブデータの形をしているかチェック
-          if (parsed && parsed.common) {
-            this._saveAll(parsed); // 鉄壁のセキュリティ関数を通して保存
-            return true;
-          }
-        } catch (e) {
-          console.error("不正なセーブコードです", e);
-        }
-        return false;
-      },
+  saveGameData: function(gameId, gameDataObj) {
+    const data = this._loadAll();
+    data.games[gameId] = gameDataObj;
+    this._saveAll(data);
+  },
     
   // =========================================
   // 実績判定も超シンプル
