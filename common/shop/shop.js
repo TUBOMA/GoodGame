@@ -47,10 +47,8 @@ function updateItemUI(card, btnOne, btnTen, ownedDiv, item) {
 
   // ▼ 10個購入ボタンの制御 ▼
   if (item.max !== -1 && item.max < 10) {
-    // 上限がそもそも10個未満のアイテムは、10個買いボタンを完全に消す
     btnTen.style.display = 'none';
   } else if (item.max !== -1 && currentQuan + 10 > item.max) {
-    // 10個買うと上限をオーバーしてしまう場合
     btnTen.textContent = "上限超過";
     btnTen.disabled = true;
     btnTen.classList.add('sold-out');
@@ -63,11 +61,60 @@ function updateItemUI(card, btnOne, btnTen, ownedDiv, item) {
   }
 }
 
+// ==========================================
+// 🏆 実績判定の専用関数（ロード時＆購入時に呼ぶ）
+// ==========================================
+function checkShopAchievements() {
+  if (typeof GameSystem.unlockAchievement !== 'function') return;
+  
+  const items = GameSystem.getOwnedItems();
+  let shopStats = GameSystem.loadGameData('shop_stats');
+  
+  // 初回のみ：過去の所持データから「購入履歴」を復元する
+  let updated = false;
+  if (!shopStats.boughtItems) {
+    shopStats.boughtItems = {};
+    for (const key in items) {
+      if (items[key] !== undefined) {
+        shopStats.boughtItems[key] = true;
+      }
+    }
+    updated = true;
+  }
+  if (!shopStats.totalBought) {
+    let currentTotal = 0;
+    for (const key in items) {
+      currentTotal += (items[key] || 0);
+    }
+    shopStats.totalBought = currentTotal;
+    updated = true;
+  }
+  if (updated) {
+    GameSystem.saveGameData('shop_stats', shopStats);
+  }
+
+  // 1. コンプリート判定（全ての商品IDが購入履歴にあるか）
+  let allBoughtAtLeastOnce = true;
+  for (let i = 0; i < shopData.length; i++) {
+    if (!shopStats.boughtItems[shopData[i].id]) {
+      allBoughtAtLeastOnce = false;
+      break;
+    }
+  }
+
+  // 2. 実績解除
+  const total = shopStats.totalBought;
+  if (total >= 1) GameSystem.unlockAchievement('achieve_shop_buy_1');
+  if (total >= 10) GameSystem.unlockAchievement('achieve_shop_buy_10');
+  if (total >= 100) GameSystem.unlockAchievement('achieve_shop_buy_100');
+  
+  if (allBoughtAtLeastOnce) GameSystem.unlockAchievement('achieve_shop_buy_all');
+}
+
 // --- 購入処理の共通化 ---
 function handlePurchase(item, amount, clickedBtn, card, ownedDiv) {
   const currentQuan = GameSystem.getItemCount(item.id);
   
-  // ★ 購入時に上限を超えないか最終チェック
   if (item.max !== -1 && currentQuan + amount > item.max) return;
 
   const actualPrice = getBulkPrice(item, currentQuan, amount);
@@ -94,17 +141,17 @@ function handlePurchase(item, amount, clickedBtn, card, ownedDiv) {
       coinDisplay.textContent = latestData.common.coins;
     }
     
-    // 【オプション】実績判定を呼ぶ（「アイテムを10回買う」などの実績のため）
-    if (typeof GameSystem.unlockAchievement === 'function') {
-      let totalBought = 0;
-      const items = GameSystem.getOwnedItems();
-      for (const key in items) {
-        totalBought += items[key];
-      }
-      if (totalBought >= 1) GameSystem.unlockAchievement('achieve_shop_buy_1');
-      if (totalBought >= 10) GameSystem.unlockAchievement('achieve_shop_buy_10');
-      if (totalBought >= 100) GameSystem.unlockAchievement('achieve_shop_buy_100');
-    }
+    // ★ 購入したことを「購入履歴」に記録する
+    let shopStats = GameSystem.loadGameData('shop_stats');
+    if (!shopStats.boughtItems) shopStats.boughtItems = {};
+    if (!shopStats.totalBought) shopStats.totalBought = 0;
+
+    shopStats.totalBought += amount;
+    shopStats.boughtItems[item.id] = true;
+    GameSystem.saveGameData('shop_stats', shopStats);
+
+    // ★ 購入直後に実績チェック
+    checkShopAchievements();
   }
 }
 
@@ -112,14 +159,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('shop-list');
 
   shopData.forEach(item => {
-    // 1. ラッパー（外箱）
     const wrapper = document.createElement('div');
     wrapper.className = 'shop-item-wrapper';
     wrapper.style.height = '100%';
     wrapper.style.display = 'flex';
     wrapper.style.flexDirection = 'column';
 
-    // 2. 実際のカード枠
     const card = document.createElement('div');
     card.className = 'shop-item';
     card.dataset.id = item.id;
@@ -140,7 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
 
-    // 3. カードの外（真下）に置く所持数テキスト
     const ownedDiv = document.createElement('div');
     ownedDiv.className = 'owned-count';
     Object.assign(ownedDiv.style, {
@@ -153,7 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
       letterSpacing: '0.5px'
     });
 
-    // 組み立てる
     wrapper.appendChild(card);
     wrapper.appendChild(ownedDiv);
     container.appendChild(wrapper);
@@ -166,4 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnOne.addEventListener('click', () => handlePurchase(item, 1, btnOne, card, ownedDiv));
     btnTen.addEventListener('click', () => handlePurchase(item, 10, btnTen, card, ownedDiv));
   });
+
+  // ★ ショップ画面を開いた時にも実績をチェックする（既に条件を満たしている場合のため）
+  checkShopAchievements();
 });
