@@ -8,7 +8,6 @@ const GameMasterData = {
       { id: 'achieve_l_clear_10', name: '英雄の凱旋', desc: 'ラストウォーを10回クリア', flavor: '君の背中についていく者が増えてきた。', game: 'l', category: 'clear', tier: 2 },
       { id: 'achieve_l_clear_100', name: '生ける伝説', desc: 'ラストウォーを100回クリア', flavor: '敵は君の名を聞いただけで逃げ出すだろう。', game: 'l', category: 'clear', tier: 3 },
       { id: 'achieve_l_clear_streak_3', name: '無敗の軍団', desc: 'ラストウォーを3連続でクリア', flavor: '3連勝。この勢いは誰にも止められない。', game: 'l', category: 'skill', tier: 1 },
-      { id: 'achieve_l_initial_10', name: '頼れる仲間たち', desc: 'ラストウォーで最初の人数が10人に到達', flavor: '10人の絆で、最初からクライマックスだ。', game: 'l', category: 'skill', tier: 2 },
 
       { id: 'achieve_c_play_1', name: 'クリックの幕開け', desc: 'クリッカーを1回プレイ', flavor: '指先の運動が、世界を動かす第一歩。', game: 'c', category: 'play', tier: 1 },
       { id: 'achieve_c_play_10', name: 'マウスクラッシャー予備軍', desc: 'クリッカーを10回プレイ', flavor: '指の筋肉が悲鳴を上げ始めている。', game: 'c', category: 'play', tier: 2 },
@@ -52,7 +51,7 @@ const GameMasterData = {
     ],
   
     shop: [
-          { id: 'l_plus', name: 'ラストウォー強化', desc: 'ラストウォーで最初の人が一人増えます。（無制限）', basePrice: 300, max: 5, game: 'l', category: 'buff', tier: -1,
+          { id: 'l_plus', name: 'ラストウォー強化', desc: 'ラストウォーで進む速度が少し遅くなります。（無制限）', basePrice: 300, max: 5, game: 'l', category: 'buff', tier: -1,
             calcPrice: (base, n) => base + Math.pow(n, 2) * 100 },
             
           { id: 'i_bougai_ikkokesu', name: '妨害キャンセラー', desc: 'イライラ棒の妨害ギミックが1つ消えます。（最大6個まで）', basePrice: 300, max: 6, game: 'i', category: 'buff', tier: 1,
