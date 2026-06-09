@@ -3,8 +3,11 @@ const startButton = document.getElementById('startButton');
 const resetButton = document.getElementById('resetButton');
 const scoreDisplay = document.getElementById('scoreDisplay');
 const missDisplay = document.getElementById('missDisplay');
+const volumeSlider = document.getElementById('volumeSlider');
+const volumeValue = document.getElementById('volumeValue');
 const highScoreDisplay = document.getElementById('highScoreDisplay');
 const messageDisplay = document.getElementById('message');
+const SOUND_VOLUME_KEY = 'memoryGameSoundVolume';
 const flipSound = new Audio('Sounds/カードをめくる.mp3');
 const matchSound = new Audio('Sounds/決定ボタンを押す33.mp3');
 const missSound = new Audio('Sounds/ビープ音4.mp3');
@@ -17,7 +20,7 @@ let turns = 0;
 let miss = 0;
 let scores = 0;
 let combos = 0;
-let misslimit = 6;
+let missLimit = 6;
 let BASE_MISS_LIMIT = 6;
 let playCount = 0;
 let clearCount = 0;
@@ -26,6 +29,14 @@ let secondCard = null;
 let newRecordTimer = null;
 let boardLock = false;
 let isGameActive = false;
+
+const soundEffects = [
+    flipSound,
+    matchSound,
+    missSound,
+    gameClearSound,
+    gameOverSound
+];
 
 function loadHighScore() {
     if (typeof GameSystem === 'undefined') {
@@ -125,6 +136,35 @@ function generateAndShuffleCards() {
     return values;
 }
 
+function loadSoundVolume() {
+    const savedVolume = localStorage.getItem(SOUND_VOLUME_KEY);
+    return savedVolume !== null ? Number(savedVolume) : 0.6;
+}
+
+function updateVolumeDisplay() {
+    const percent = Math.round(loadSoundVolume() * 100);
+    volumeSlider.value = percent;
+    volumeValue.textContent = `${percent}%`;
+}
+
+function applySoundVolume(volume) {
+    soundEffects.forEach(sound => {
+        sound.volume = volume;
+    });
+}
+
+function handleVolumeChange() {
+    const volume = Number(volumeSlider.value) / 100;
+    localStorage.setItem(SOUND_VOLUME_KEY, volume);
+    volumeValue.textContent = `${volumeSlider.value}%`;
+    applySoundVolume(volume);
+}
+
+function updateMissDisplay() {
+    missDisplay.textContent = `ミス: ${miss}/${missLimit}`;
+}
+
+
 function createBoard(values) {
     gameBoard.innerHTML = '';
 
@@ -220,9 +260,9 @@ function unflipCards() {
         missSound.currentTime = 0;
         missSound.play();
         combos = 0;
-        missDisplay.textContent = `ミス: ${miss}`;
+        updateMissDisplay();
 
-        if (miss >= misslimit) {
+        if (miss >= missLimit) {
             messageDisplay.textContent = 'ゲームオーバー！';
             gameOver();
         }
@@ -238,7 +278,6 @@ function gameOver() {
     messageDisplay.textContent = `ゲームオーバー！スコア: ${scores}点！`;
     if (typeof GameSystem !== 'undefined') {
         GameSystem.addCoins(100); // 数字は一旦100統一で 調整は後々
-        addPlayCount();
         if (cardsFlipped === 0) {
             if(typeof GameSystem !== 'undefined') {
                 GameSystem.unlockAchievement('achieve_s_zero_pair');
@@ -254,7 +293,6 @@ function gameClear() {
     messageDisplay.textContent = `クリア！スコア: ${scores}点！`;
     if (typeof GameSystem !== 'undefined') {
         GameSystem.addCoins(200); // 数字は一旦100統一で 調整は後々
-        addPlayCount();
         addClearCount();
         if (miss === 0) {
             if(typeof GameSystem !== 'undefined') {
@@ -273,33 +311,36 @@ function gameEnd() {
     resetButton.disabled = true;
     startButton.textContent = 'もう一度プレイ';
 
+    const stats = loadGameStats();
+    const currentPlayCount = stats.playCount;
+    const currentClearCount = stats.clearCount;
     const currentHighScore = loadHighScore();
-    if (playCount === 1) {
+    if (playCount >= 1) {
         if(typeof GameSystem !== 'undefined') {
             GameSystem.unlockAchievement('achieve_s_play_1');
         }
     }
-    if (playCount === 10) {
+    if (playCount >= 10) {
         if(typeof GameSystem !== 'undefined') {
             GameSystem.unlockAchievement('achieve_s_play_10');
         }
     }
-    if (playCount === 100) {
+    if (playCount >= 100) {
         if(typeof GameSystem !== 'undefined') {
             GameSystem.unlockAchievement('achieve_s_play_100');
         }
     }
-    if (clearCount === 1) {
+    if (clearCount >= 1) {
         if(typeof GameSystem !== 'undefined') {
             GameSystem.unlockAchievement('achieve_s_clear_1');
         }
     }
-    if (clearCount === 10) {
+    if (clearCount >= 10) {
         if(typeof GameSystem !== 'undefined') {
             GameSystem.unlockAchievement('achieve_s_clear_10');
         }
     }
-    if (clearCount === 100) {
+    if (clearCount >= 100) {
         if(typeof GameSystem !== 'undefined') {
             GameSystem.unlockAchievement('achieve_s_clear_100');
         }
@@ -316,14 +357,27 @@ function initializeGame() {
     const stats = loadGameStats();
     playCount = stats.playCount;
     clearCount = stats.clearCount;
+    if (typeof GameSystem !== 'undefined') {
+        // ★ここを一時的に追加して、ブラウザのコンソール（F12）に何が出るか見てみてください
+        console.log("取得したアイテム数:", GameSystem.getItemCount('s_miss_plus'));
+        // 未購入なら 0 が返ってくるので、何も起きず安全です
+        missLimit = BASE_MISS_LIMIT + GameSystem.getItemCount('s_miss_plus');
+    }
 
+    applySoundVolume(loadSoundVolume());
+    updateVolumeDisplay();
+    updateMissDisplay();
     updateHighScoreDisplay();
+    setTimeout(() => {
+        updateMissDisplay();
+    }, 0);
 
     const initialValues = generateAndShuffleCards();
     createBoard(initialValues);
 
     startButton.addEventListener('click', startGame);
     resetButton.addEventListener('click', resetGame);
+    volumeSlider.addEventListener('input', handleVolumeChange);
 }
 
 function startGame() {
@@ -336,15 +390,14 @@ function startGame() {
 
     resetBoard();
     updateHighScoreDisplay();
-    if (typeof GameSystem !== 'undefined') {
-        // 未購入なら 0 が返ってくるので、何も起きず安全です
-        misslimit = BASE_MISS_LIMIT + GameSystem.getItemCount('s_miss_plus');
-    }
     scoreDisplay.textContent = `スコア: ${scores}`;
-    missDisplay.textContent = `ミス: ${miss}`;
+    updateMissDisplay();
     startButton.disabled = true;
     resetButton.disabled = false;
     messageDisplay.textContent = 'カードをめくってください';
+    if (typeof GameSystem !== 'undefined') {
+        addPlayCount();
+    }
 
     const shuffledValues = generateAndShuffleCards();
     createBoard(shuffledValues);
