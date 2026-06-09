@@ -244,6 +244,32 @@ h1 {
     transform: none;
 }
 
+.sound-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    color: #e0f2fe;
+    background: rgba(2, 6, 23, 0.42);
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.sound-control input[type="range"] {
+    width: 120px;
+    accent-color: #facc15;
+    cursor: pointer;
+}
+
+#volumeValue {
+    min-width: 42px;
+    color: #a7f3d0;
+    text-align: right;
+}
+
 @media (max-width: 1120px) {
     .layout {
         grid-template-columns: 1fr;
@@ -298,5 +324,10 @@ h1 {
     .home-button {
         width: 100%;
         padding-inline: 10px;
+    }
+
+    .sound-control {
+        justify-content: space-between;
+        width: 100%;
     }
 }
