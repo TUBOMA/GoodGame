@@ -17,6 +17,37 @@ const GameSystem = {
     const data = this._loadAll();
     return data.common.selectedTitle || null;
   },
+    
+    exportSaveData: function() {
+        const data = this._loadAll();
+        // データを文字にして、さらにBase64という形式で暗号化（っぽいパスワードに）する
+        try {
+          const jsonString = JSON.stringify(data);
+          // 日本語の実績名なども安全に変換できるように encodeURIComponent を挟む
+          return btoa(encodeURIComponent(jsonString));
+        } catch (e) {
+          console.error("出力エラー:", e);
+          return null;
+        }
+      },
+
+      importSaveData: function(code) {
+        try {
+          // パスワードを元のデータに復元する
+          const jsonString = decodeURIComponent(atob(code));
+          const dataObj = JSON.parse(jsonString);
+          
+          // データが正しいか（commonという箱があるか）を最低限チェック
+          if (dataObj && dataObj.common) {
+            this._saveAll(dataObj); // まるごとセーブデータに上書き！
+            return true;
+          }
+          return false;
+        } catch (e) {
+          console.error("読み込みエラー:", e);
+          return false; // 不正なコードが入力されたら弾く
+        }
+      },
 
   setSelectedTitle: function(achId) {
     const data = this._loadAll();
