@@ -203,7 +203,8 @@ function matchCards() {
     matchSound.play();
 
     const baseScore = 100;
-    const turnBonus = Math.max(0, 70 - turns * 5);
+    const pairsTurn = Math.max(1, turns - (cardsFlipped * 2)); 
+    const turnBonus = Math.max(0, 200 - pairsTurn * 50);
     const comboBonus = (combos - 1) * 100;
 
     scores += baseScore + turnBonus + comboBonus;
