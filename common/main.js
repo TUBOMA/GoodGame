@@ -1,54 +1,58 @@
 // セーブデータを保存するたった1つのキー名
 const SAVE_KEY = 'good_game_save_data';
 
-// ★変更：unlockedAchievements をやめ、旧来の achievements に統一！
 const DEFAULT_SAVE_DATA = {
   common: {
     coins: 0,
     ownedItems: {},
-    achievements: [] // 解除済み実績のIDを入れる箱
+    achievements: [],
+    shopStats: {} // ★ 新しくcommonの中に正式な部屋を用意
   },
   games: {}
 };
 
 const GameSystem = {
-    
-    // ★追加：現在セットされている称号のIDを取得する
-      getSelectedTitle: function() {
-        const data = this._loadAll();
-        return data.common.selectedTitle || null;
-      },
+  
+  getSelectedTitle: function() {
+    const data = this._loadAll();
+    return data.common.selectedTitle || null;
+  },
 
-      // ★追加：称号をセットしてセーブする
-      setSelectedTitle: function(achId) {
-        const data = this._loadAll();
-        data.common.selectedTitle = achId;
-        this._saveAll(data);
-      },
+  setSelectedTitle: function(achId) {
+    const data = this._loadAll();
+    data.common.selectedTitle = achId;
+    this._saveAll(data);
+  },
+
   _loadAll: function() {
     const dataString = localStorage.getItem(SAVE_KEY);
     return dataString ? JSON.parse(dataString) : JSON.parse(JSON.stringify(DEFAULT_SAVE_DATA));
   },
 
   // =========================================
-  // データをセーブする（鉄壁のセキュリティ版）
+  // データをセーブする（鉄壁のセキュリティ＆自動お掃除版）
   // =========================================
-    // =========================================
-      // データをセーブする（鉄壁のセキュリティ版）
-      // =========================================
-      _saveAll: function(dataObj) {
-        const cleanData = {
-          common: {
-            coins: typeof dataObj.common?.coins === 'number' ? dataObj.common.coins : 0,
-            ownedItems: dataObj.common?.ownedItems || {},
-            achievements: dataObj.common?.achievements || [],
-            selectedTitle: dataObj.common?.selectedTitle || null // ★この1行を追加！
-          },
-          games: dataObj.games || {}
-        };
-
-        localStorage.setItem(SAVE_KEY, JSON.stringify(cleanData));
+  _saveAll: function(dataObj) {
+    const cleanData = {
+      common: {
+        coins: typeof dataObj.common?.coins === 'number' ? dataObj.common.coins : 0,
+        ownedItems: dataObj.common?.ownedItems || {},
+        achievements: dataObj.common?.achievements || [],
+        selectedTitle: dataObj.common?.selectedTitle || null,
+        shopStats: dataObj.common?.shopStats || {} // ★ 共通データとして保存
       },
+      games: dataObj.games || {}
+    };
+
+    // ★ 自動マイグレーション（お引っ越し）機能
+    // もし過去の気持ち悪い `games.shop_stats` が残っていたら、綺麗に common に移して消す
+    if (cleanData.games.shop_stats) {
+      cleanData.common.shopStats = cleanData.games.shop_stats;
+      delete cleanData.games.shop_stats;
+    }
+
+    localStorage.setItem(SAVE_KEY, JSON.stringify(cleanData));
+  },
 
   getCoins: function() {
     return this._loadAll().common.coins;
@@ -119,29 +123,65 @@ const GameSystem = {
     return true;
   },
 
+  // =========================================
+  // ★ ゲームデータのロード＆セーブ（ルーター機能付き）
+  // =========================================
   loadGameData: function(gameId) {
     const data = this._loadAll();
+    // shop.js からの呼び出しだけ、こっそり common 階層に案内する
+    if (gameId === 'shop_stats') {
+      return data.common.shopStats || {};
+    }
     return data.games[gameId] || {};
   },
 
   saveGameData: function(gameId, gameDataObj) {
     const data = this._loadAll();
-    data.games[gameId] = gameDataObj;
-    this._saveAll(data);
-  },
     
+    // shop.js からの保存は common 階層へ逃がす
+    if (gameId === 'shop_stats') {
+      data.common.shopStats = gameDataObj;
+    } else {
+      data.games[gameId] = gameDataObj;
+    }
+    
+    this._saveAll(data);
+
+    // ★ 共通実績の判定！
+    // どこかのゲームでプレイ回数などがセーブされた「その瞬間」に、裏で合計値を計算して実績を出す！
+    if (gameId !== 'shop_stats') {
+      this._checkTotalPlayAchievements();
+    }
+  },
+
   // =========================================
-  // 実績判定も超シンプル
+  // ★ 全ゲームの合計プレイ回数を計算する裏処理
   // =========================================
+  _checkTotalPlayAchievements: function() {
+    const data = this._loadAll();
+    let totalPlayCount = 0;
+
+    if (data && data.games) {
+      for (const id in data.games) {
+        if (data.games[id].playCount) {
+          totalPlayCount += data.games[id].playCount;
+        }
+      }
+    }
+
+    // すでに解除済みならスキップされるので、毎回呼ばれても一瞬で終わります
+    if (totalPlayCount >= 1) this.unlockAchievement("achieve_all_play_1");
+    if (totalPlayCount >= 10) this.unlockAchievement("achieve_all_play_10");
+    if (totalPlayCount >= 100) this.unlockAchievement("achieve_all_play_100");
+    if (totalPlayCount >= 1000) this.unlockAchievement("achieve_all_play_1000");
+  },
+
   hasAchievement: function(achId) {
     const data = this._loadAll();
     const achs = data.common.achievements || [];
     return achs.includes(achId);
   },
 
-  // =========================================
-  // 実績解除も素直に書くだけ
-  // =========================================
   unlockAchievement: function(achId) {
     const data = this._loadAll();
     
@@ -166,65 +206,59 @@ const GameSystem = {
     return true;
   },
 
-    _showAchievementToast: function(achName) {
-        // ★ 1. 通知を縦に並べるための「透明な箱」を画面上に探す（無ければ作る）
-        let container = document.getElementById('toast-container');
-        if (!container) {
-          container = document.createElement('div');
-          container.id = 'toast-container';
-          Object.assign(container.style, {
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            display: 'flex',
-            flexDirection: 'column-reverse', // 下から上に向かって積み上げる
-            gap: '12px',                     // 通知同士のスキマ
-            zIndex: '99999',
-            pointerEvents: 'none'            // 箱自体がマウスクリックを邪魔しないようにする
-          });
-          document.body.appendChild(container);
+  _showAchievementToast: function(achName) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      Object.assign(container.style, {
+        position: 'fixed',
+        bottom: '20px',
+        right: '20px',
+        display: 'flex',
+        flexDirection: 'column-reverse',
+        gap: '12px',
+        zIndex: '99999',
+        pointerEvents: 'none'
+      });
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.innerHTML = `<span style="font-size: 1.2rem; margin-right: 8px;">🏆</span> 実績解除: <strong style="color: #fde047;">${achName}</strong>`;
+    
+    Object.assign(toast.style, {
+      background: 'rgba(15, 23, 42, 0.95)',
+      color: '#f7fbff',
+      border: '1px solid rgba(56, 189, 248, 0.5)',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.2)',
+      padding: '16px 24px',
+      borderRadius: '8px',
+      fontSize: '1rem',
+      fontWeight: 'bold',
+      transition: 'opacity 0.4s ease, transform 0.4s ease',
+      opacity: '0',
+      transform: 'translateX(50px)'
+    });
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(0)';
+    }, 10);
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(50px)';
+      
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
         }
-
-        // ★ 2. 通知本体を作る
-        const toast = document.createElement('div');
-        toast.innerHTML = `<span style="font-size: 1.2rem; margin-right: 8px;">🏆</span> 実績解除: <strong style="color: #fde047;">${achName}</strong>`;
-        
-        // （元の position: fixed や bottom, right は箱に任せるので削除）
-        Object.assign(toast.style, {
-          background: 'rgba(15, 23, 42, 0.95)',
-          color: '#f7fbff',
-          border: '1px solid rgba(56, 189, 248, 0.5)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.2)',
-          padding: '16px 24px',
-          borderRadius: '8px',
-          fontSize: '1rem',
-          fontWeight: 'bold',
-          transition: 'opacity 0.4s ease, transform 0.4s ease',
-          opacity: '0',
-          transform: 'translateX(50px)' // ★ 右からスライドインさせるための初期位置
-        });
-
-        // bodyではなく、用意した箱(container)の中に追加する
-        container.appendChild(toast);
-
-        // 追加直後にアニメーション開始（右からスッと入ってくる）
-        setTimeout(() => {
-          toast.style.opacity = '1';
-          toast.style.transform = 'translateX(0)';
-        }, 10);
-
-        // 3.5秒後に消すアニメーション
-        setTimeout(() => {
-          toast.style.opacity = '0';
-          toast.style.transform = 'translateX(50px)'; // 右へスッと帰っていく
-          
-          setTimeout(() => {
-            if (toast.parentNode) {
-              toast.parentNode.removeChild(toast);
-            }
-          }, 400);
-        }, 3500);
-      },
+      }, 400);
+    }, 3500);
+  },
 
   showToast: function(message) {
     const toast = document.createElement('div');

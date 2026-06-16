@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =========================================
-// 🏆 称号の表示システム（カスタム対応版）
+// 🏆 称号の表示システム（未選択時は非表示版）
 // =========================================
 function updatePlayerTitle() {
   if (typeof GameSystem === 'undefined' || typeof GameMasterData === 'undefined') return;
@@ -26,26 +26,24 @@ function updatePlayerTitle() {
   
   if (!titleContainer || !titleNameEl) return;
 
-  // まだ1つも実績を解除していない場合は隠す
-  if (unlockedIds.length === 0) {
+  // 自分で選んだ称号（selectedTitle）を取得する
+  let targetId = GameSystem.getSelectedTitle();
+
+  // ★変更：「まだ自分で選んでいない」または「データが存在しない」場合は、エリアごと隠して終了する
+  if (!targetId || !unlockedIds.includes(targetId)) {
     titleContainer.style.display = 'none';
     return;
   }
-
-  titleContainer.style.display = 'block';
-
-  // ★ 変更：まずは自分で選んだ称号（selectedTitle）があるかチェックする
-  let targetId = GameSystem.getSelectedTitle();
-
-  // もし「まだ自分で選んでいない」か「データがおかしい」場合は、ランダムに選ぶ
-  if (!targetId || !unlockedIds.includes(targetId)) {
-    targetId = unlockedIds[Math.floor(Math.random() * unlockedIds.length)];
-  }
   
-  // マスターデータから名前を探して表示する
+  // マスターデータから名前を探してくる
   const achData = GameMasterData.achievements.find(a => a.id === targetId);
+  
   if (achData) {
+    // 正しく称号が見つかった時だけ表示する
+    titleContainer.style.display = 'block';
     titleNameEl.textContent = "🏆 " + achData.name;
+  } else {
+    titleContainer.style.display = 'none';
   }
 }
 
