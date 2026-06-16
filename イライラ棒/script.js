@@ -123,6 +123,10 @@ function cellKey(column, row) {
 const hitSound = new Audio('./sounds/ミス.mp3'); // ファイルパスは適宜調整してください
 const clearSound = new Audio('./sounds/クリア.mp3');
 
+function playHitSound() {
+  hitSound.cloneNode().play().catch(() => {});
+}
+
 // 配列の順番をランダムに入れ替えます。コースや障害物のランダム生成で使います。
 function shuffle(items) {
   const shuffled = [...items];
@@ -511,8 +515,7 @@ function failRound() {
     }
   }
   // 効果音を再生 
-  hitSound.currentTime = 0; // 連続で鳴らせるように再生位置を先頭に戻す
-  hitSound.play();
+  playHitSound();
 
   resetPlayerToStart();
   gameArea.classList.add("is-danger");
