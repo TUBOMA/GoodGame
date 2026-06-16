@@ -20,8 +20,13 @@ function getBulkPrice(item, currentQuan, amount) {
 function updateItemUI(card, btnOne, btnTen, ownedDiv, item) {
   const currentQuan = GameSystem.getItemCount(item.id);
   const priceOne = item.calcPrice(item.basePrice, currentQuan);
-  const priceTen = getBulkPrice(item, currentQuan, 10);
   
+  // ★ 追加：まとめ買いの個数を計算（最大10個、または残り買える限界まで）
+  let bulkAmount = 10;
+  if (item.max !== -1) {
+    bulkAmount = Math.min(10, item.max - currentQuan);
+  }
+
   // ★ 枠外にある所持数テキストを更新
   if (ownedDiv) {
     let maxText = item.max !== -1 ? ` / 最大${item.max}個` : '';
@@ -30,7 +35,13 @@ function updateItemUI(card, btnOne, btnTen, ownedDiv, item) {
 
   const priceDiv = card.querySelector('.price');
   if (priceDiv) {
-    priceDiv.innerHTML = `1個: <b>${priceOne} C</b> <br> <span style="font-size: 0.85rem; color: #a7f3d0;">10個: ${priceTen} C</span>`;
+    // ★ 修正：残り2個以上の時はその個数での値段を、残り1個以下の時は1個の値段だけを表示
+    if (bulkAmount > 1) {
+      const priceBulk = getBulkPrice(item, currentQuan, bulkAmount);
+      priceDiv.innerHTML = `1個: <b>${priceOne} C</b> <br> <span style="font-size: 0.85rem; color: #a7f3d0;">${bulkAmount}個: ${priceBulk} C</span>`;
+    } else {
+      priceDiv.innerHTML = `1個: <b>${priceOne} C</b>`;
+    }
   }
   
   // ▼ 1個購入ボタンの制御 ▼
@@ -45,24 +56,21 @@ function updateItemUI(card, btnOne, btnTen, ownedDiv, item) {
     btnOne.classList.remove('sold-out');
   }
 
-  // ▼ 10個購入ボタンの制御 ▼
-  if (item.max !== -1 && item.max < 10) {
-    btnTen.style.display = 'none';
-  } else if (item.max !== -1 && currentQuan + 10 > item.max) {
-    btnTen.textContent = "上限超過";
-    btnTen.disabled = true;
-    btnTen.classList.add('sold-out');
-    btnTen.style.display = 'block';
-  } else {
-    btnTen.textContent = "10個購入";
+  // ▼ まとめ買いボタンの制御 ▼
+  if (bulkAmount > 1) {
+    // 買える数が2個以上なら、その個数をボタンに表示する
+    btnTen.textContent = `${bulkAmount}個購入`;
     btnTen.disabled = false;
     btnTen.classList.remove('sold-out');
     btnTen.style.display = 'block';
+  } else {
+    // 残り1個しか買えない、または売り切れの時はまとめ買いボタンを完全に消す
+    btnTen.style.display = 'none';
   }
 }
 
 // ==========================================
-// 🏆 実績判定の専用関数（ロード時＆購入時に呼ぶ）
+// 🏆 実績判定の専用関数（超強力な修復機能付き）
 // ==========================================
 function checkShopAchievements() {
   if (typeof GameSystem.unlockAchievement !== 'function') return;
@@ -70,45 +78,49 @@ function checkShopAchievements() {
   const items = GameSystem.getOwnedItems();
   let shopStats = GameSystem.loadGameData('shop_stats');
   
-  // 初回のみ：過去の所持データから「購入履歴」を復元する
+  if (!shopStats.boughtItems) shopStats.boughtItems = {};
+  if (!shopStats.totalBought) shopStats.totalBought = 0;
+
   let updated = false;
-  if (!shopStats.boughtItems) {
-    shopStats.boughtItems = {};
-    for (const key in items) {
-      if (items[key] !== undefined) {
-        shopStats.boughtItems[key] = true;
-      }
+
+  // 【自己修復】今持っているアイテムは強制的に「購入済み」として履歴に書き込む
+  for (const key in items) {
+    if (items[key] !== undefined && !shopStats.boughtItems[key]) {
+      shopStats.boughtItems[key] = true;
+      updated = true;
     }
-    updated = true;
   }
-  if (!shopStats.totalBought) {
-    let currentTotal = 0;
-    for (const key in items) {
-      currentTotal += (items[key] || 0);
-    }
-    shopStats.totalBought = currentTotal;
-    updated = true;
-  }
+
   if (updated) {
     GameSystem.saveGameData('shop_stats', shopStats);
   }
 
-  // 1. コンプリート判定（全ての商品IDが購入履歴にあるか）
   let allBoughtAtLeastOnce = true;
+  let missingItems = []; // デバッグ用：何が足りないか記録する箱
+
   for (let i = 0; i < shopData.length; i++) {
     if (!shopStats.boughtItems[shopData[i].id]) {
       allBoughtAtLeastOnce = false;
-      break;
+      missingItems.push(shopData[i].name); // 買っていないアイテムの名前を記録
     }
   }
 
-  // 2. 実績解除
+  // コンソールに状況を報告させる
+  if (!allBoughtAtLeastOnce) {
+    console.log("【実績チェック】コンプリートまであと: ", missingItems.join(", "));
+  } else {
+    console.log("【実績チェック】全種類購入済みです！");
+  }
+
+  // 実績解除の実行
   const total = shopStats.totalBought;
   if (total >= 1) GameSystem.unlockAchievement('achieve_shop_buy_1');
   if (total >= 10) GameSystem.unlockAchievement('achieve_shop_buy_10');
   if (total >= 100) GameSystem.unlockAchievement('achieve_shop_buy_100');
   
-  if (allBoughtAtLeastOnce) GameSystem.unlockAchievement('achieve_shop_buy_all');
+  if (allBoughtAtLeastOnce) {
+    GameSystem.unlockAchievement('achieve_shop_buy_all');
+  }
 }
 
 // --- 購入処理の共通化 ---
@@ -141,7 +153,7 @@ function handlePurchase(item, amount, clickedBtn, card, ownedDiv) {
       coinDisplay.textContent = latestData.common.coins;
     }
     
-    // ★ 購入したことを「購入履歴」に記録する
+    // ★ 購入したことを確実に「購入履歴」に記録する
     let shopStats = GameSystem.loadGameData('shop_stats');
     if (!shopStats.boughtItems) shopStats.boughtItems = {};
     if (!shopStats.totalBought) shopStats.totalBought = 0;
@@ -150,7 +162,7 @@ function handlePurchase(item, amount, clickedBtn, card, ownedDiv) {
     shopStats.boughtItems[item.id] = true;
     GameSystem.saveGameData('shop_stats', shopStats);
 
-    // ★ 購入直後に実績チェック
+    // 購入直後に実績チェック
     checkShopAchievements();
   }
 }
@@ -207,9 +219,20 @@ document.addEventListener('DOMContentLoaded', () => {
     updateItemUI(card, btnOne, btnTen, ownedDiv, item);
 
     btnOne.addEventListener('click', () => handlePurchase(item, 1, btnOne, card, ownedDiv));
-    btnTen.addEventListener('click', () => handlePurchase(item, 10, btnTen, card, ownedDiv));
+    
+    // ★ 修正：ボタンが押された瞬間に「今買える個数」を再計算して処理に渡す
+    btnTen.addEventListener('click', () => {
+      const currentQuan = GameSystem.getItemCount(item.id);
+      let bulkAmount = 10;
+      if (item.max !== -1) {
+        bulkAmount = Math.min(10, item.max - currentQuan);
+      }
+      if (bulkAmount > 1) {
+        handlePurchase(item, bulkAmount, btnTen, card, ownedDiv);
+      }
+    });
   });
 
-  // ★ ショップ画面を開いた時にも実績をチェックする（既に条件を満たしている場合のため）
+  // ショップ画面を開いた時にも実績をチェックする
   checkShopAchievements();
 });
