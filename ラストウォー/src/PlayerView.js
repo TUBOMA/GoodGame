@@ -3,7 +3,6 @@
 //プレイヤーの見た目と左右移動を担当するクラス
 class PlayerView {
   constructor(scene) {
-    //プレイヤー表示の作成
     this.scene = scene;
     this.currentLane = Lane.Left;
 
@@ -28,20 +27,28 @@ class PlayerView {
   }
 
   resetLane() {
-    //プレイヤーを左レーンに戻す処理
+    //新しいプレイでは左レーンから始める
+    this.scene.tweens.killTweensOf(this.container);
     this.currentLane = Lane.Left;
     this.container.x = Left_Lane_X;
+    this.container.setAngle(0);
+    this.container.setScale(1);
   }
 
   moveToLane(lane) {
-    //プレイヤーを指定レーンへ動かす処理
     this.currentLane = lane;
-
-    //
     const targetX = lane === Lane.Left ? Left_Lane_X : Right_Lane_X;
+    const direction = targetX > this.container.x ? 1 : -1;
+
+    this.scene.tweens.killTweensOf(this.container);
+    this.container.setAngle(direction * -10);
+    this.container.setScale(1.12, 0.9);
     this.scene.tweens.add({
       targets: this.container,
       x: targetX,
+      angle: 0,
+      scaleX: 1,
+      scaleY: 1,
       duration: 80,
       ease: "Sine.easeOut",
     });
@@ -56,8 +63,18 @@ class PlayerView {
   }
 
   updatePopulation(population) {
-    //プレイヤー周りの人数表示
+    //プレイヤー周囲の点と人数表示を更新する
     this.populationText.setText(`${population}`);
+    const populationLength = `${population}`.length;
+
+    if (populationLength >= 8) {
+      this.populationText.setFontSize(13);
+    } else if (populationLength >= 5) {
+      this.populationText.setFontSize(16);
+    } else {
+      this.populationText.setFontSize(20);
+    }
+
     this.dots.clear();
 
     const dotCount = Math.min(population, 18);
@@ -66,7 +83,6 @@ class PlayerView {
     const firstX = -((dotCount - 1) * circleGap) / 2;
 
     this.dots.fillStyle(0xffffff, 0.92);
-
 
     for (let i = 0; i < dotCount; i += 1) {
       const x = firstX + i * circleGap;

@@ -22,31 +22,27 @@ function Create_Random_Phases() {
 
 function Create_One_Strict_Phase(phaseSetting, startPopulation) {
   for (let tryCount = 0; tryCount < Max_Phase_Create_Try_Count; tryCount += 1) {
-    const phase = Create_One_Phase_Once(phaseSetting, startPopulation);
+    const phase = {
+      name: phaseSetting.name,
+      speed: phaseSetting.speed,
+      fogAlpha: phaseSetting.fogAlpha,
+      noiseCount: phaseSetting.noiseCount,
+      gateCount: phaseSetting.gateCount,
+      randomLevel: phaseSetting.randomLevel,
+      gates: [],
+    };
+    let expectedPopulation = startPopulation;
+
+    for (let i = 0; i < phase.gateCount; i += 1) {
+      const gatePair = Make_Gate_Pair(phase.randomLevel, expectedPopulation);
+      phase.gates.push(gatePair);
+      expectedPopulation = Get_Better_Result(expectedPopulation, gatePair);
+    }
 
     if (Set_Phase_Wall_For_One_Person_Clear(phase, startPopulation)) {
       return phase;
     }
   }
-
-  //設定を変えた結果、条件を満たす問題を作れない場合に気づけるようにする
-  throw new Error(`${phaseSetting.name} の問題生成に失敗しました`);
-}
-
-//主なゲート生成の場所
-function Create_One_Phase_Once(phaseSetting, startPopulation) {
-  const phase = Copy_Phase_Setting(phaseSetting);
-  phase.gates = [];
-  let expectedPopulation = startPopulation;
-
-  for (let i = 0; i < phase.gateCount; i += 1) {
-    const gatePair = Make_Gate_Pair(phase.randomLevel, expectedPopulation);
-
-    phase.gates.push(gatePair);
-    expectedPopulation = Get_Better_Result(expectedPopulation, gatePair);
-  }
-
-  return phase;
 }
 
 function Set_Phase_Wall_For_One_Person_Clear(phase, startPopulation) {
@@ -97,21 +93,11 @@ function Get_Populations_After_Gate_Pair(populations, gatePair) {
   return nextPopulations;
 }
 
-function Copy_Phase_Setting(phaseSetting) {
-  return {
-    name: phaseSetting.name,
-    speed: phaseSetting.speed,
-    fogAlpha: phaseSetting.fogAlpha,
-    noiseCount: phaseSetting.noiseCount,
-    wallCost: phaseSetting.wallCost,
-    gateCount: phaseSetting.gateCount,
-    randomLevel: phaseSetting.randomLevel,
-  };
-}
-
 function Make_Gate_Pair(randomLevel, currentPopulation) {
   //ぱっと見で判断しにくい組み合わせを多めに作る
-  if (Math.random() < Get_Thinking_Gate_Chance(randomLevel)) {
+  const thinkingGateChance = randomLevel === 1 ? 0.4 : 0.6;
+
+  if (Math.random() < thinkingGateChance) {
     return Make_Thinking_Gate_Pair(randomLevel, currentPopulation);
   }
 
@@ -125,14 +111,6 @@ function Make_Gate_Pair(randomLevel, currentPopulation) {
 
   const gatePair = Shuffle_Gates([firstGate, secondGate]);
   return Fix_Gate_Pair_If_Needed(gatePair, randomLevel, currentPopulation);
-}
-
-function Get_Thinking_Gate_Chance(randomLevel) {
-  if (randomLevel === 1) {
-    return 0.7;
-  }
-
-  return 0.85;
 }
 
 function Make_Thinking_Gate_Pair(randomLevel, currentPopulation) {
